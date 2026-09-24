@@ -43,6 +43,18 @@ class CourseToggle(BaseModel):
     enabled: bool
 
 
+class NewCourse(BaseModel):
+    name: str
+
+
+class EditDeadline(BaseModel):
+    """Every field optional; only what is sent gets changed."""
+    title: str | None = None
+    due_at: str | None = None
+    course: str | None = None
+    course_id: str | None = None
+
+
 def create_app(config: Config, secrets: Secrets) -> FastAPI:
     app = FastAPI(title="coursetrack", docs_url=None, redoc_url=None)
 
@@ -79,6 +91,10 @@ def create_app(config: Config, secrets: Secrets) -> FastAPI:
                     "url": d.url,
                     "private": d.private,
                     "submission": submission,
+                    "done": d.id in store.private.manual_done or submission in
+                            {"submitted", "graded", "pending_review"},
+                    "manually_done": d.id in store.private.manual_done,
+                    "editable": d.source == MANUAL,
                     "dismissed": d.id in store.private.dismissed,
                     "course_enabled": store.course_enabled(d.course_id),
                     "reminders": sorted(
@@ -91,7 +107,8 @@ def create_app(config: Config, secrets: Secrets) -> FastAPI:
             "now": now.isoformat(),
             "deadlines": rows,
             "courses": [
-                {"id": cid, "name": meta.get("name", cid), "enabled": meta.get("enabled", True)}
+                {"id": cid, "name": meta.get("name", cid), "enabled": meta.get("enabled", True),
+                 "custom": bool(meta.get("custom"))}
                 for cid, meta in sorted(
                     store.private.course_settings.items(),
                     key=lambda kv: kv[1].get("name", kv[0]),
@@ -148,6 +165,63 @@ def create_app(config: Config, secrets: Secrets) -> FastAPI:
         elif deadline_id not in store.private.dismissed:
             store.private.dismissed.append(deadline_id)
         return {"git": persist(store, "update dismissed deadlines")}
+
+    @app.post("/api/deadlines/{deadline_id}/done")
+    def mark_done(deadline_id: str, undo: bool = False) -> dict[str, Any]:
+        """Manual completion, for work Canvas cannot see.
+
+        Gradescope submissions never reach Canvas, so those assignments stay
+        "unsubmitted" forever and would be reminded about indefinitely.
+        """
+        store = fresh_store()
+        store.mark_done(deadline_id, done=not undo)
+        store.apply_manual_done()
+        return {"git": persist(store, "mark deadline " + ("not done" if undo else "done"))}
+
+    @app.patch("/api/deadlines/{deadline_id}")
+    def edit(deadline_id: str, payload: EditDeadline) -> dict[str, Any]:
+        store = fresh_store()
+
+        fields: dict[str, Any] = {}
+        if payload.title is not None:
+            if not payload.title.strip():
+                raise HTTPException(400, "title cannot be empty")
+            fields["title"] = payload.title.strip()
+        if payload.due_at is not None:
+            try:
+                due = datetime.fromisoformat(payload.due_at)
+            except ValueError:
+                raise HTTPException(400, "due_at must be ISO 8601, e.g. 2026-09-25T23:59")
+            if due.tzinfo is None:
+                due = due.replace(tzinfo=config.timezone)
+            fields["due_at"] = due.astimezone(config.timezone).isoformat()
+        if payload.course_id is not None:
+            fields["course_id"] = payload.course_id
+            # Keep the display name in step with the course it now belongs to.
+            meta = store.private.course_settings.get(payload.course_id)
+            fields["course"] = meta.get("name", payload.course or "Other") if meta else (payload.course or "Other")
+        elif payload.course is not None:
+            fields["course"] = payload.course
+
+        if not store.update_manual(deadline_id, **fields):
+            raise HTTPException(404, "not a manual deadline; Canvas owns this one")
+        return {"git": persist(store, "edit manual deadline")}
+
+    @app.post("/api/courses")
+    def create_course(payload: NewCourse) -> dict[str, Any]:
+        store = fresh_store()
+        try:
+            course_id = store.add_course(payload.name)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc))
+        return {"id": course_id, "git": persist(store, f"add course: {payload.name}")}
+
+    @app.delete("/api/courses/{course_id}")
+    def delete_course(course_id: str) -> dict[str, Any]:
+        store = fresh_store()
+        if not store.remove_course(course_id):
+            raise HTTPException(400, "only custom courses can be deleted")
+        return {"git": persist(store, "remove custom course")}
 
     @app.post("/api/courses/{course_id}/toggle")
     def toggle(course_id: str, payload: CourseToggle) -> dict[str, Any]:

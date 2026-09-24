@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -62,6 +63,11 @@ class PrivateState:
     course_settings: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     dismissed: list[str] = field(default_factory=list)
+
+    # Deadlines you marked submitted by hand. Needed because Canvas cannot see
+    # work submitted on Gradescope, so it reports those as unsubmitted forever
+    # and would keep sending reminders for things already turned in.
+    manual_done: list[str] = field(default_factory=list)
 
     # sha256 of the last published payload's plaintext, so change detection
     # needs no plaintext file on disk.
@@ -187,6 +193,65 @@ class Store:
 
     def set_course_enabled(self, course_id: str, enabled: bool) -> None:
         self.private.course_settings.setdefault(str(course_id), {})["enabled"] = enabled
+
+    def add_course(self, name: str) -> str:
+        """Create a course that Canvas does not know about."""
+        name = name.strip()
+        if not name:
+            raise ValueError("course name is required")
+        for course_id, meta in self.private.course_settings.items():
+            if meta.get("name", "").strip().lower() == name.lower():
+                return course_id  # already exists; do not duplicate
+        course_id = f"custom:{uuid.uuid4().hex[:8]}"
+        self.private.course_settings[course_id] = {
+            "enabled": True, "name": name, "custom": True,
+        }
+        return course_id
+
+    def remove_course(self, course_id: str) -> bool:
+        """Delete a custom course. Canvas-owned courses cannot be removed."""
+        meta = self.private.course_settings.get(course_id)
+        if not meta or not meta.get("custom"):
+            return False
+        del self.private.course_settings[course_id]
+        for entry in self.private.manual_entries:
+            if entry.get("course_id") == course_id:
+                entry["course_id"] = ""
+                entry["course"] = "Other"
+        return True
+
+    def update_manual(self, deadline_id: str, **fields: Any) -> bool:
+        """Edit a manual deadline in place, e.g. to move it to another course."""
+        for entry in self.private.manual_entries:
+            if entry["id"] == deadline_id:
+                entry.update({k: v for k, v in fields.items() if v is not None})
+                return True
+        return False
+
+    # ---- manual completion -----------------------------------------------
+
+    def mark_done(self, deadline_id: str, done: bool = True) -> None:
+        marked = set(self.private.manual_done)
+        if done:
+            marked.add(deadline_id)
+        else:
+            marked.discard(deadline_id)
+            # apply_manual_done() wrote "submitted" into the derived state;
+            # drop it, or un-marking would leave the item looking complete
+            # until the next Canvas fetch happened to overwrite it.
+            self.private.submission_states.pop(deadline_id, None)
+        self.private.manual_done = sorted(marked)
+
+    def apply_manual_done(self) -> None:
+        """Overlay manual completions onto the states fetched from Canvas.
+
+        Called after every fetch, because the fetch replaces submission_states
+        wholesale. Keeping manual_done as the source of truth and deriving
+        submission_states from it means reminders, the calendar checkmark and
+        the published payload all honour it with no further changes.
+        """
+        for deadline_id in self.private.manual_done:
+            self.private.submission_states[deadline_id] = "submitted"
 
     def enabled_course_names(self) -> dict[str, str]:
         return {

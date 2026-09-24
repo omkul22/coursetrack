@@ -75,6 +75,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("title")
     p.add_argument("due", help="ISO local time, e.g. 2026-09-25T23:59")
     p.add_argument("--course", default="Other")
+    p.add_argument(
+        "--course-id",
+        default="",
+        help="attach to an existing course id so it inherits that course's on/off toggle",
+    )
     p.add_argument("--url", default=None)
     p.add_argument("--private", action="store_true", help="redact from the public file")
     p.set_defaults(handler=cmd_add)
@@ -91,6 +96,8 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="disable every course with no tracked deadlines",
     )
+    p.add_argument("--add", metavar="NAME", help="create a course Canvas does not know about")
+    p.add_argument("--remove", metavar="ID", help="delete a custom course")
     p.set_defaults(handler=cmd_courses)
 
     p = sub.add_parser("test-email", help="send one test message")
@@ -293,7 +300,7 @@ def cmd_add(args) -> int:
         id=manual_id(),
         source=MANUAL,
         course=args.course,
-        course_id="",
+        course_id=args.course_id,
         title=args.title,
         due_at=due,
         url=args.url,
@@ -331,6 +338,13 @@ def cmd_courses(args) -> int:
     for deadline in store.all_deadlines():
         counts[deadline.course_id] = counts.get(deadline.course_id, 0) + 1
 
+    if args.add:
+        course_id = store.add_course(args.add)
+        print(f"  course id: {course_id}  ({args.add})")
+    if args.remove and not store.remove_course(args.remove):
+        print(f"  {args.remove} is not a custom course; only custom courses can be removed")
+        return 1
+
     if args.disable_empty:
         for course_id in store.private.course_settings:
             if not counts.get(course_id):
@@ -340,7 +354,7 @@ def cmd_courses(args) -> int:
     for course_id in args.enable:
         store.set_course_enabled(course_id, True)
 
-    changed = bool(args.enable or args.disable or args.disable_empty)
+    changed = bool(args.enable or args.disable or args.disable_empty or args.add or args.remove)
     if changed:
         store.save(store.all_deadlines(), datetime.now(config.timezone))
 

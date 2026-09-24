@@ -37,6 +37,7 @@
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
   font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -116,7 +117,7 @@ button.ghost:hover { background: var(--surface-2); color: var(--text); }
 .panel h2 { font-size: 13px; margin: 0 0 14px; letter-spacing: -.005em; }
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
 .field label { font-size: 12px; color: var(--muted); }
-input[type=text], input[type=datetime-local] {
+select, input[type=text], input[type=datetime-local] {
   font: inherit; font-size: 14px; padding: 8px 11px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--bg); color: var(--text); width: 100%;
 }
@@ -177,8 +178,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
       <div class="two">
         <div class="field">
           <label for="f-course">Course</label>
-          <input type="text" id="f-course" list="courseList" placeholder="17-437" value="Other">
-          <datalist id="courseList"></datalist>
+          <select id="f-course"></select>
         </div>
         <div class="field">
           <label for="f-due">Due</label>
@@ -198,6 +198,11 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   <div class="panel">
     <h2>Courses</h2>
     <div class="courses" id="courses"></div>
+    <form id="courseForm" style="display:flex;gap:8px;margin-top:14px">
+      <input type="text" id="f-newcourse" placeholder="Add a course Canvas doesn't have"
+             style="flex:1" required>
+      <button class="primary" type="submit" style="width:auto;white-space:nowrap">Add course</button>
+    </form>
   </div>
 
 </div>
@@ -377,9 +382,32 @@ function renderRow(row, now) {
       </div>
     </div>
     <div class="actions">
+      <button class="ghost" data-act="done">${row.done ? "Not done" : "Mark done"}</button>
+      ${row.editable ? `<button class="ghost" data-act="move">Course</button>` : ""}
       <button class="ghost" data-act="dismiss">${row.dismissed ? "Restore" : "Dismiss"}</button>
-      ${row.source === "manual" ? `<button class="ghost" data-act="delete">Delete</button>` : ""}
+      ${row.editable ? `<button class="ghost" data-act="delete">Delete</button>` : ""}
     </div>`;
+
+  el.querySelector('[data-act="done"]').onclick = async () => {
+    await api(`/api/deadlines/${encodeURIComponent(row.id)}/done?undo=${row.done}`, { method: "POST" });
+    toast(row.done ? "Marked not done" : "Marked done \u2014 reminders stop");
+    await load();
+  };
+
+  const move = el.querySelector('[data-act="move"]');
+  if (move) move.onclick = async () => {
+    const options = STATE.courses.map((c, i) => `${i + 1}. ${c.name}`).join("\n");
+    const pick = prompt(`Move "${row.title}" to which course?\n\n${options}\n\nEnter a number:`);
+    if (!pick) return;
+    const chosen = STATE.courses[parseInt(pick, 10) - 1];
+    if (!chosen) { toast("No such course", true); return; }
+    await api(`/api/deadlines/${encodeURIComponent(row.id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ course_id: chosen.id, course: chosen.name }),
+    });
+    toast(`Moved to ${chosen.name}`);
+    await load();
+  };
 
   el.querySelector('[data-act="dismiss"]').onclick = async () => {
     await api(`/api/deadlines/${encodeURIComponent(row.id)}/dismiss?undo=${row.dismissed}`, { method: "POST" });
@@ -402,17 +430,30 @@ function renderCourses() {
     box.innerHTML = `<div class="empty" style="padding:16px">No courses yet — run a sync.</div>`;
     return;
   }
-  const datalist = $("courseList");
-  datalist.innerHTML = "";
+  const picker = $("f-course");
+  const previous = picker.value;
+  picker.innerHTML = '<option value="">Other (no course)</option>';
+  for (const course of STATE.courses) {
+    picker.appendChild(Object.assign(document.createElement("option"),
+      { value: course.id, textContent: course.name }));
+  }
+  picker.value = previous;
 
   for (const course of STATE.courses) {
-    datalist.appendChild(Object.assign(document.createElement("option"), { value: course.name }));
-
     const el = document.createElement("div");
     el.className = "course" + (course.enabled ? "" : " off");
     el.innerHTML = `
       <label class="switch"><input type="checkbox" ${course.enabled ? "checked" : ""}><span></span></label>
-      <div class="name">${escapeHtml(course.name)}</div>`;
+      <div class="name">${escapeHtml(course.name)}</div>
+      ${course.custom ? `<span class="pill">custom</span>
+        <button class="ghost" data-del="${escapeAttr(course.id)}">Delete</button>` : ""}`;
+    const del = el.querySelector("[data-del]");
+    if (del) del.onclick = async () => {
+      if (!confirm(`Delete the course "${course.name}"? Its deadlines are kept and become uncategorised.`)) return;
+      await api(`/api/courses/${encodeURIComponent(course.id)}`, { method: "DELETE" });
+      toast("Course deleted");
+      await load();
+    };
     el.querySelector("input").onchange = async (event) => {
       await api(`/api/courses/${encodeURIComponent(course.id)}/toggle`, {
         method: "POST",
@@ -457,6 +498,21 @@ $("syncBtn").onclick = async (event) => {
   }
 };
 
+$("courseForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    await api("/api/courses", {
+      method: "POST",
+      body: JSON.stringify({ name: $("f-newcourse").value }),
+    });
+    toast("Course added");
+    event.target.reset();
+    await load();
+  } catch (err) {
+    toast(err.message, true);
+  }
+};
+
 $("addForm").onsubmit = async (event) => {
   event.preventDefault();
   try {
@@ -464,7 +520,8 @@ $("addForm").onsubmit = async (event) => {
       method: "POST",
       body: JSON.stringify({
         title: $("f-title").value,
-        course: $("f-course").value || "Other",
+        course_id: $("f-course").value,
+        course: $("f-course").selectedOptions[0]?.textContent || "Other",
         due_at: $("f-due").value,
         url: $("f-url").value || null,
         private: $("f-private").checked,
@@ -472,7 +529,6 @@ $("addForm").onsubmit = async (event) => {
     });
     toast("Added");
     event.target.reset();
-    $("f-course").value = "Other";
     await load();
   } catch (err) {
     toast(err.message, true);

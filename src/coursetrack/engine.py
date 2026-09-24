@@ -129,6 +129,7 @@ def run_tick(
     for course_id, name in fetched.courses.items():
         store.private.course_settings.setdefault(course_id, {"enabled": True, "name": name})["name"] = name
 
+    store.apply_manual_done()
     store.set_canvas_cache(fetched.deadlines)
     active = [d for d in fetched.deadlines if store.course_enabled(d.course_id)]
 

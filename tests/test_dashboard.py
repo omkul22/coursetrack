@@ -144,3 +144,107 @@ def test_commit_messages_never_contain_a_private_title(client, config, monkeypat
     assert captured
     assert all("Therapy" not in m for m in captured)
     assert "private deadline" in captured[0]
+
+
+# --- manual completion -----------------------------------------------------
+
+
+def test_mark_done_stops_reminders_for_gradescope_work(client, config, key):
+    """Canvas never sees Gradescope submissions, so it reports them unsubmitted
+    forever. Marking done by hand has to suppress reminders."""
+    deadline_id = client.post(
+        "/api/deadlines", json={"title": "Lab 3", "due_at": "2026-10-09T23:59"}
+    ).json()["id"]
+
+    assert client.get("/api/state").json()["deadlines"][0]["done"] is False
+
+    client.post(f"/api/deadlines/{deadline_id}/done")
+    row = client.get("/api/state").json()["deadlines"][0]
+    assert row["done"] is True
+    assert row["manually_done"] is True
+
+    store = Store(config, key=key).load()
+    assert store.private.submission_states[deadline_id] == "submitted"
+
+
+def test_mark_done_can_be_undone(client):
+    deadline_id = client.post(
+        "/api/deadlines", json={"title": "Lab 3", "due_at": "2026-10-09T23:59"}
+    ).json()["id"]
+    client.post(f"/api/deadlines/{deadline_id}/done")
+    client.post(f"/api/deadlines/{deadline_id}/done?undo=true")
+    assert client.get("/api/state").json()["deadlines"][0]["done"] is False
+
+
+def test_manual_completion_survives_a_canvas_refetch(config, key, now):
+    """A fetch replaces submission_states wholesale; the override must re-apply."""
+    store = Store(config, key=key).load()
+    store.mark_done("canvas:1:2")
+    store.private.submission_states = {"canvas:1:2": "unsubmitted"}  # as Canvas says
+    store.apply_manual_done()
+    assert store.private.submission_states["canvas:1:2"] == "submitted"
+
+
+# --- custom courses --------------------------------------------------------
+
+
+def test_create_a_course_canvas_does_not_know_about(client):
+    response = client.post("/api/courses", json={"name": "10714 Deep Learning Systems"})
+    assert response.status_code == 200
+    course_id = response.json()["id"]
+    assert course_id.startswith("custom:")
+
+    courses = client.get("/api/state").json()["courses"]
+    assert courses[0]["name"] == "10714 Deep Learning Systems"
+    assert courses[0]["custom"] is True
+
+
+def test_creating_the_same_course_twice_does_not_duplicate(client):
+    first = client.post("/api/courses", json={"name": "10714 DLSys"}).json()["id"]
+    second = client.post("/api/courses", json={"name": "  10714 dlsys  "}).json()["id"]
+    assert first == second
+    assert len(client.get("/api/state").json()["courses"]) == 1
+
+
+def test_blank_course_name_is_rejected(client):
+    assert client.post("/api/courses", json={"name": "   "}).status_code == 400
+
+
+def test_a_deadline_can_be_moved_to_another_course(client):
+    course_id = client.post("/api/courses", json={"name": "10714 DLSys"}).json()["id"]
+    deadline_id = client.post(
+        "/api/deadlines", json={"title": "Homework 2", "due_at": "2026-10-08T23:59"}
+    ).json()["id"]
+
+    client.patch(f"/api/deadlines/{deadline_id}", json={"course_id": course_id})
+
+    row = [r for r in client.get("/api/state").json()["deadlines"] if r["id"] == deadline_id][0]
+    assert row["course_id"] == course_id
+    assert row["course"] == "10714 DLSys"
+
+
+def test_canvas_deadlines_cannot_be_edited(client):
+    assert client.patch("/api/deadlines/canvas:1:2", json={"title": "nope"}).status_code == 404
+
+
+def test_deleting_a_custom_course_keeps_its_deadlines(client):
+    course_id = client.post("/api/courses", json={"name": "Temp"}).json()["id"]
+    deadline_id = client.post(
+        "/api/deadlines", json={"title": "Keep me", "due_at": "2026-10-08T23:59"}
+    ).json()["id"]
+    client.patch(f"/api/deadlines/{deadline_id}", json={"course_id": course_id})
+
+    client.delete(f"/api/courses/{course_id}")
+
+    state = client.get("/api/state").json()
+    assert state["courses"] == []
+    assert [r["title"] for r in state["deadlines"]] == ["Keep me"]
+    assert state["deadlines"][0]["course"] == "Other"
+
+
+def test_canvas_courses_cannot_be_deleted(client, config, key):
+    store = Store(config, key=key).load()
+    store.private.course_settings["55646"] = {"enabled": True, "name": "18740"}
+    store.save(None, datetime.now(config.timezone))
+
+    assert client.delete("/api/courses/55646").status_code == 400
