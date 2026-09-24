@@ -140,8 +140,16 @@ def check_payload_contents_are_not_leaked(envelope: dict | None) -> bool:
     courses = {row["course"] for row in payload.get("deadlines", [])}
     needles = [t for t in titles if len(t) > 8] + [c for c in courses if len(c) > 8]
 
+    # Only generated files. Source and tests are hand-written and reviewed, and
+    # their placeholder fixtures ("Homework 3", "10714 Deep Learning Systems")
+    # collide with real assignment titles constantly -- flagging those trains
+    # you to ignore the check, which is worse than not having it.
     for path in tracked_files():
-        if path.name == "data.enc" or not path.is_file():
+        if not path.is_file():
+            continue
+        rel = path.relative_to(ROOT)
+        generated = rel.parts and rel.parts[0] in {"data", "docs"}
+        if not generated or path.name == "data.enc":
             continue
         try:
             text = path.read_text(errors="ignore")
@@ -149,7 +157,7 @@ def check_payload_contents_are_not_leaked(envelope: dict | None) -> bool:
             continue
         for needle in needles:
             if needle in text:
-                fail(f"{path.relative_to(ROOT)} leaks {needle[:32]!r} in the clear")
+                fail(f"{rel} leaks {needle[:32]!r} in the clear")
     return True
 
 
