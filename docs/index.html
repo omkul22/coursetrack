@@ -4,40 +4,178 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="coursetrack-build" content="6">
-<meta name="theme-color" content="#1d2125">
+<meta name="coursetrack-build" content="7">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#16191d">
 <title>CourseTrack</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📋</text></svg>">
 <style>
+/* Generated from the local dashboard by scripts/build_hosted.py -- edit that
+   dashboard, not this file, so the two cannot drift apart. */
+
+/* Dark by default and only. A light variant would be a second palette to keep
+   correct for no one who asked for it. */
 :root{
-  --bg:#f4f5f7; --surface:#fff; --surface-2:#f1f2f4; --border:#dfe1e6;
-  --text:#172b4d; --muted:#626f86; --faint:#8993a4;
-  --accent:#0c66e4; --danger:#c9372c; --warn:#e56910; --mid:#b38600; --ok:#216e4e;
-  --radius:8px; --shadow:0 1px 1px rgba(9,30,66,.13),0 0 1px rgba(9,30,66,.08);
+  --bg:#16191d; --surface:#1f2429; --surface-2:#262c32; --border:#343c44;
+  --text:#e3e8ee; --muted:#9aa7b4; --faint:#6b7887;
+  --accent:#579dff; --danger:#f87168; --warn:#fea362; --mid:#e2b203; --ok:#4bce97;
+  --radius:10px; --shadow:0 1px 2px rgba(0,0,0,.45),0 1px 1px rgba(0,0,0,.3);
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#1d2125; --surface:#22272b; --surface-2:#282e33; --border:#38414a;
-  --text:#dee4ea; --muted:#9fadbc; --faint:#738496;
-  --accent:#579dff; --danger:#f87168; --warn:#fea362; --mid:#e2b203; --ok:#7ee2b8;
-  --shadow:0 1px 1px rgba(0,0,0,.5),0 0 1px rgba(0,0,0,.4);
-}}
 *{box-sizing:border-box}
 [hidden]{display:none !important}
 body{margin:0;background:var(--bg);color:var(--text);
   font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:1180px;margin:0 auto;
-  padding:max(20px,env(safe-area-inset-top)) 16px calc(60px + env(safe-area-inset-bottom))}
+.wrap{max-width:1060px;margin:0 auto;padding:24px 20px 80px}
 
-/* lock */
+header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.grow{flex:1;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:4px 10px;
+  border-radius:20px;background:var(--surface-2);color:var(--muted);
+  border:1px solid var(--border);white-space:nowrap}
+.badge.ok{color:var(--ok)} .badge.bad{color:var(--danger)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+button{font:inherit;font-size:13px;cursor:pointer;border-radius:6px;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:7px 13px}
+button:hover{background:var(--border)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--accent);border-color:var(--accent);color:#0b1220;font-weight:600}
+button.primary:hover{filter:brightness(1.12)}
+button.ghost{border-color:transparent;background:transparent;color:var(--muted);
+  padding:3px 7px;font-size:12px}
+button.ghost:hover{background:var(--surface-2);color:var(--text)}
+
+/* ---- week summary ---- */
+.summary{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.summary .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--faint);font-weight:600;margin-bottom:8px}
+.bars{display:flex;flex-direction:column;gap:9px}
+.barrow{display:grid;grid-template-columns:96px 1fr 46px;gap:10px;align-items:center;font-size:12px}
+.barrow .nm{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:7px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.fill{height:100%;border-radius:4px;transition:width .3s}
+.barrow .n{color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
+
+.upnext{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:24px;box-shadow:var(--shadow)}
+.upnext h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);
+  margin:0 0 10px;font-weight:600}
+.un{display:grid;grid-template-columns:16px 1fr auto;gap:10px;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border)}
+.un:last-child{border-bottom:none}
+.un .t{min-width:0;font-size:13.5px;font-weight:500}
+.un .t small{display:block;color:var(--faint);font-size:11.5px;font-weight:400;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.un .w{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.w.p1{color:var(--danger)} .w.p2{color:var(--warn)} .w.p3{color:var(--mid)} .w.p4{color:var(--muted)}
+
+/* ---- course tiles ---- */
+.board{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;
+  box-shadow:var(--shadow);overflow:hidden;background:var(--surface)}
+.board > summary{list-style:none;cursor:pointer;display:grid;
+  /* swatch | name | mini bar | percent | chevron -- five children, so five
+     columns, or the chevron wraps and pushes the bar out of view. */
+  grid-template-columns:10px 1fr 120px auto 12px;gap:12px;align-items:center;
+  padding:13px 16px;user-select:none}
+.board > summary::-webkit-details-marker{display:none}
+.board > summary:hover{filter:brightness(1.1)}
+.swatch{width:10px;height:10px;border-radius:50%}
+.board .name{font-weight:600;font-size:14px;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .name small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);margin-top:2px}
+.mini{width:120px;display:block}
+.count{font-size:11px;color:var(--muted);background:rgba(0,0,0,.25);
+  border:1px solid var(--border);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.chev{color:var(--faint);transition:transform .15s}
+.board[open] .chev{transform:rotate(90deg)}
+.cols{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)}
+.col{padding:12px;min-width:0}
+.col + .col{border-left:1px solid var(--border)}
+.col h3{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);
+  margin:0 0 10px;font-weight:600}
+.col.past{background:rgba(0,0,0,.16)}
+
+.card{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;margin-bottom:6px}
+.card:last-child{margin-bottom:0}
+.card:hover{border-color:var(--faint)}
+.card .row1{display:flex;gap:8px;align-items:flex-start}
+.card .t{flex:1;min-width:0;font-size:13px;font-weight:500;line-height:1.35;word-break:break-word}
+.card .t a{color:inherit;text-decoration:none}
+.card .t a:hover{text-decoration:underline}
+.card .meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;
+  margin-top:5px;font-size:11.5px;color:var(--muted)}
+.card.finished .t{color:var(--faint);text-decoration:line-through}
+.prio{flex:0 0 14px;margin-top:1px}
+.chk{flex:0 0 16px;width:16px;height:16px;padding:0;border-radius:4px;
+  border:1.5px solid var(--faint);background:transparent;display:grid;place-items:center;line-height:1}
+.chk:hover{border-color:var(--ok);background:transparent}
+.chk.on{background:var(--ok);border-color:var(--ok);color:#0b1220}
+.chk svg{display:block}
+.tag{font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,.25);
+  border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.tag.late{color:var(--danger);border-color:currentColor}
+.tag.ok{color:var(--ok)} .tag.priv{color:var(--accent)}
+.acts{display:none;gap:1px;margin-top:6px}
+.card:hover .acts,.card:focus-within .acts{display:flex}
+.colempty{color:var(--faint);font-size:12px;padding:9px 2px;font-style:italic}
+.clear{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);
+  padding:20px;text-align:center;color:var(--faint);font-size:13px}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-top:18px;box-shadow:var(--shadow)}
+.panel h2{font-size:13px;margin:0 0 14px;font-weight:600}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:11.5px;color:var(--muted);font-weight:500}
+select,input[type=text],input[type=datetime-local]{font:inherit;font-size:13.5px;
+  padding:8px 10px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.check input{width:auto}
+.course{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:13.5px}
+.course .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.course.off .nm{color:var(--faint);text-decoration:line-through}
+.switch{position:relative;width:32px;height:18px;flex:none}
+.switch input{opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;background:var(--border);border-radius:9px;
+  pointer-events:none;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;
+  border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + span{background:var(--accent)}
+.switch input:checked + span::after{transform:translateX(14px)}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--text);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:13px;
+  box-shadow:var(--shadow);transition:transform .2s;z-index:50;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.bad{background:var(--danger);color:#fff}
+@media (max-width:760px){
+  .summary{grid-template-columns:1fr;gap:16px;justify-items:center;text-align:center}
+  .barrow{grid-template-columns:80px 1fr 40px}
+  .cols{grid-template-columns:1fr}
+  .col + .col{border-left:none;border-top:1px solid var(--border)}
+  .two{grid-template-columns:1fr}
+  .acts{display:flex}
+  .mini{display:none}
+  .board > summary{grid-template-columns:10px 1fr auto 12px}
+}
+
+
 #lock{min-height:100dvh;display:grid;place-items:center;padding:16px}
 #lock .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:26px 22px;box-shadow:var(--shadow);width:100%;max-width:370px;text-align:center}
+  padding:26px 22px;box-shadow:var(--shadow);width:100%;max-width:370px;text-align:center;margin:0}
+#lock .card:hover{border-color:var(--border)}
 #lock h1{font-size:18px;margin:0 0 6px;font-weight:600}
 #lock p{color:var(--muted);font-size:13px;margin:0 0 18px}
-input[type=password]{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:3px;
+input[type=password]{font:inherit;font-size:16px;width:100%;padding:10px 12px;border-radius:6px;
   border:1px solid var(--border);background:var(--bg);color:var(--text);text-align:center}
-input:focus{outline:2px solid var(--accent);outline-offset:-1px}
 #lock button{width:100%;margin-top:12px}
 .err{color:var(--danger);font-size:12.5px;margin-top:12px;min-height:16px}
 .remember{display:flex;gap:8px;align-items:center;justify-content:center;
@@ -46,79 +184,10 @@ input:focus{outline:2px solid var(--accent);outline-offset:-1px}
 #diag{font:11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint);
   text-align:left;margin:14px 0 0;white-space:pre-wrap;word-break:break-all}
 #diag b{color:var(--danger);font-weight:600}
-
-button{font:inherit;font-size:13px;cursor:pointer;border-radius:3px;
-  border:1px solid var(--accent);background:var(--accent);color:#fff;padding:9px 14px}
-button:hover{filter:brightness(1.1)} button:disabled{opacity:.6;cursor:default}
 .linkbtn{background:none;border:none;color:var(--muted);padding:4px 8px;
-  font-size:12px;text-decoration:underline;width:auto}
-
-/* app */
-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-h1.app{font-size:19px;margin:0;font-weight:600}
-.sub{color:var(--muted);font-size:12px;margin-top:2px}
-.grow{flex:1;min-width:0}
-.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 9px;
-  border-radius:3px;background:var(--surface-2);color:var(--muted);
-  border:1px solid var(--border);white-space:nowrap}
-.badge.ok{color:var(--ok)} .badge.bad{color:var(--danger)}
-.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
-
-.strip{margin-bottom:24px}
-.strip h2,.col h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
-  color:var(--faint);margin:0 0 10px;font-weight:600}
-.rail{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;
-  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-.up{flex:0 0 min(234px,80vw);scroll-snap-align:start;background:var(--surface);
-  border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;
-  box-shadow:var(--shadow);border-left:3px solid var(--accent)}
-.up.p1{border-left-color:var(--danger)} .up.p2{border-left-color:var(--warn)}
-.up.p3{border-left-color:var(--mid)}
-.up .t{font-weight:600;font-size:13.5px;line-height:1.3;margin-bottom:6px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.up .c{font-size:11.5px;color:var(--faint);margin-bottom:8px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.up .d{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
-.up .d.p1{color:var(--danger)} .up .d.p2{color:var(--warn)} .up .d.p3{color:var(--mid)}
-.clear{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);
-  padding:20px;text-align:center;color:var(--faint);font-size:13px}
-
-.board{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden}
-.board > .head{display:flex;align-items:center;gap:10px;padding:11px 14px;
-  border-bottom:1px solid var(--border);background:var(--surface-2)}
-.board .name{font-weight:600;font-size:13.5px;flex:1;min-width:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.count{font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--border);
-  border-radius:10px;padding:1px 8px;white-space:nowrap}
-.cols{display:grid;grid-template-columns:1fr 1fr}
-.col{padding:11px;min-width:0}
-.col + .col{border-left:1px solid var(--border)}
-.col.past{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
-
-.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;
-  padding:8px 10px;margin-bottom:6px;box-shadow:var(--shadow)}
-.card:last-child{margin-bottom:0}
-.card .row1{display:flex;gap:8px;align-items:flex-start}
-.card .t{flex:1;min-width:0;font-size:13px;font-weight:500;line-height:1.35;word-break:break-word}
-.card .t a{color:inherit;text-decoration:none}
-.card .meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;
-  margin-top:5px;font-size:11.5px;color:var(--muted)}
-.card.finished .t{color:var(--faint);text-decoration:line-through}
-.prio{flex:0 0 14px;margin-top:1px}
-.mark{flex:0 0 16px;width:16px;height:16px;border-radius:3px;border:1.5px solid var(--faint);
-  display:grid;place-items:center;line-height:1}
-.mark.on{background:var(--ok);border-color:var(--ok);color:#fff}
-.tag{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--surface-2);
-  border:1px solid var(--border);color:var(--muted);white-space:nowrap}
-.tag.late{color:var(--danger);border-color:currentColor}
-.tag.ok{color:var(--ok)} .tag.priv{color:var(--accent)}
-.colempty{color:var(--faint);font-size:12px;padding:9px 2px;font-style:italic}
+  font-size:12px;text-decoration:underline}
 .foot{margin-top:26px;text-align:center;color:var(--faint);font-size:11.5px;line-height:1.7}
-@media (max-width:720px){
-  .cols{grid-template-columns:1fr}
-  .col + .col{border-left:none;border-top:1px solid var(--border)}
-}
+
 </style>
 </head>
 <body>
@@ -132,7 +201,7 @@ h1.app{font-size:19px;margin:0;font-weight:600}
              autofocus spellcheck="false">
       <label class="remember"><input type="checkbox" id="remember" checked>
         Stay unlocked on this device</label>
-      <button type="submit" id="unlockBtn">Unlock</button>
+      <button type="submit" id="unlockBtn" class="primary">Unlock</button>
     </form>
     <div class="err" id="err"></div>
     <pre id="diag"></pre>
@@ -142,16 +211,24 @@ h1.app{font-size:19px;margin:0;font-weight:600}
 <div class="wrap" id="app" hidden>
   <header>
     <div class="grow">
-      <h1 class="app">CourseTrack</h1>
+      <h1>CourseTrack</h1>
       <div class="sub" id="sub"></div>
     </div>
     <span class="badge" id="health"><span class="dot"></span><span id="healthText"></span></span>
     <button class="linkbtn" id="lockBtn">Lock</button>
   </header>
 
-  <div class="strip">
-    <h2 id="stripTitle">Due this week</h2>
-    <div class="rail" id="rail"></div>
+  <div class="summary">
+    <div id="donut"></div>
+    <div style="min-width:0">
+      <div class="label">This week by course</div>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+
+  <div class="upnext">
+    <h2 id="upTitle">Coming up</h2>
+    <div id="up"></div>
   </div>
 
   <div id="boards"></div>
@@ -165,38 +242,17 @@ h1.app{font-size:19px;margin:0;font-weight:600}
 
 <script>
 "use strict";
+
 const $ = (id) => document.getElementById(id);
 const HOUR = 3600e3;
 const DAY = 24 * HOUR;
-const STORAGE_KEY = "coursetrack.pass";
-let DATA = null;
+const OPEN_KEY = "coursetrack.open";
+let STATE = null;
 
-/* ---------- crypto ---------- */
-function b64ToBytes(value) {
-  const binary = atob(value);
-  const out = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
-  return out;
-}
-
-async function decrypt(envelope, passphrase) {
-  const material = await crypto.subtle.importKey(
-    "raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]);
-  const key = await crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: b64ToBytes(envelope.salt),
-      iterations: envelope.iterations, hash: "SHA-256" },
-    material, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-  // GCM authenticates, so a wrong key throws rather than yielding garbage.
-  const plain = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: b64ToBytes(envelope.iv) }, key, b64ToBytes(envelope.ct));
-  return JSON.parse(new TextDecoder().decode(plain));
-}
-
-/* ---------- board model ----------
-   Identical rule to the local dashboard: a deadline leaves the summary and
-   moves to its course's past column purely on time. Ticking done moves it
-   there early. That is what makes 18740 usable, where Canvas never sees the
-   Gradescope submission. */
+/* Time decides the column, not completion: once the due moment passes, a
+   deadline leaves the summary and moves to its course's past column whether
+   or not it was ticked. Ticking moves it there early. That is what makes
+   18740 workable, where Canvas never sees the Gradescope submission. */
 const isPast = (row, now) => row.done || row.dismissed || new Date(row.due_at) - now < 0;
 
 function priority(ms, done) {
@@ -224,7 +280,20 @@ function prioIcon(level) {
     role="img"><title>${PRIO_LABEL[level]}</title>${paths}</svg>`;
 }
 const TICK = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor"
-  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L4.8 9.2 10 3.5"/></svg>`;
+  stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L4.8 9.2 10 3.5"/></svg>`;
+
+/* Per-course colour. Hashing a key into the palette looked stable but collided
+   -- two of four courses came out the same blue, which defeats the point.
+   Assign by position in the sorted key list instead: distinct for up to eight
+   courses, and stable for as long as the set of courses is. */
+const PALETTE = ["#579dff","#9f8fef","#4bce97","#f5cd47","#fea362","#f87168","#6cc3e0","#e774bb"];
+let COLORS = new Map();
+
+function assignColors(keys) {
+  COLORS = new Map([...new Set(keys)].sort()
+    .map((key, index) => [key, PALETTE[index % PALETTE.length]]));
+}
+const courseColor = (key) => COLORS.get(key) || PALETTE[0];
 
 /* ---------- formatting ---------- */
 function relative(ms) {
@@ -239,77 +308,202 @@ function relative(ms) {
   return `in ${Math.round(ms / DAY)}d`;
 }
 const shortDate = (iso) => new Date(iso).toLocaleString([], {
-  month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 const esc = (v) => String(v).replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+
+
+/* Monday 00:00 to Sunday 23:59 of the current week. */
+function weekBounds(now) {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+  return [start.getTime(), end.getTime()];
+}
+
+function donutSvg(done, total) {
+  const pct = total ? done / total : 0;
+  const r = 34, circ = 2 * Math.PI * r;
+  return `<svg width="94" height="94" viewBox="0 0 94 94" role="img"
+      aria-label="${done} of ${total} done this week">
+    <circle cx="47" cy="47" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
+    <circle cx="47" cy="47" r="${r}" fill="none" stroke="var(--ok)" stroke-width="10"
+      stroke-linecap="round" stroke-dasharray="${circ}"
+      stroke-dashoffset="${circ * (1 - pct)}" transform="rotate(-90 47 47)"/>
+    <text x="47" y="45" text-anchor="middle" font-size="19" font-weight="700"
+      fill="var(--text)">${Math.round(pct * 100)}%</text>
+    <text x="47" y="60" text-anchor="middle" font-size="10.5"
+      fill="var(--muted)">${done}/${total} done</text>
+  </svg>`;
+}
+
 /* ---------- render ---------- */
+
 function render() {
-  if (!DATA) return;
+  if (!STATE) return;
   const now = Date.now();
-  const rows = DATA.deadlines;
+  const rows = STATE.deadlines;
 
-  const upcoming = rows.filter((r) => !isPast(r, now) && new Date(r.due_at) - now <= 7 * DAY)
-    .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
-  $("stripTitle").textContent = `Due this week · ${upcoming.length}`;
-  $("rail").innerHTML = upcoming.length
-    ? upcoming.map((r) => {
-        const ms = new Date(r.due_at) - now;
-        const p = priority(ms, false);
-        return `<div class="up p${p}"><div class="t">${esc(r.title)}</div>
-          <div class="c">${esc(r.course || "No course")}</div>
-          <div class="d p${p}">${relative(ms)} · ${shortDate(r.due_at)}</div></div>`;
-      }).join("")
-    : `<div class="clear" style="flex:1">Nothing due in the next 7 days.</div>`;
+  assignColors(rows.map((r) => r.course || "__none__"));
 
-  const groups = new Map();
-  for (const row of rows) {
-    const key = row.course || "No course";
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(row);
-  }
-  const soonest = (list) => Math.min(
-    ...list.filter((r) => !isPast(r, now)).map((r) => new Date(r.due_at) - now), Infinity);
-  const ordered = [...groups.entries()].sort((a, b) => soonest(a[1]) - soonest(b[1]));
+  renderWeek(rows, now);
+  renderUpNext(rows, now);
+  renderBoards(rows, now);
 
-  const host = $("boards");
-  host.innerHTML = "";
-  for (const [name, list] of ordered) {
-    const due = list.filter((r) => !isPast(r, now))
-      .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
-    const past = list.filter((r) => isPast(r, now))
-      .sort((a, b) => new Date(b.due_at) - new Date(a.due_at));
-
-    const board = document.createElement("div");
-    board.className = "board";
-    board.innerHTML = `
-      <div class="head"><div class="name">${esc(name)}</div>
-        <span class="count">${due.length} upcoming</span></div>
-      <div class="cols">
-        <div class="col"><h3>Due · ${due.length}</h3>
-          ${due.length ? due.map((r) => card(r, now)).join("")
-                       : '<div class="colempty">All clear</div>'}</div>
-        <div class="col past"><h3>Done &amp; passed · ${past.length}</h3>
-          ${past.length ? past.map((r) => card(r, now)).join("")
-                        : '<div class="colempty">Nothing yet</div>'}</div>
-      </div>`;
-    host.appendChild(board);
-  }
-
-  const th = (DATA.thresholds || []).map((h) => h >= 24 ? `${h / 24}d` : `${h}h`).join(" and ");
+  const th = (STATE.thresholds || []).map((h) => h >= 24 ? `${h / 24}d` : `${h}h`).join(" and ");
   const open = rows.filter((r) => !isPast(r, now)).length;
-  $("sub").textContent = `${open} upcoming · ${rows.length} tracked · reminders at ${th}`;
-
-  const age = (now - new Date(DATA.generated_at)) / HOUR;
+  $("sub").textContent = `${open} upcoming · ${rows.length} tracked · reminders at ${th}` +
+ "";
+  const age = (now - new Date(STATE.generated_at)) / HOUR;
   $("health").className = "badge " + (age < 26 ? "ok" : "bad");
   $("healthText").textContent = age < 1 ? "updated just now" : `updated ${Math.round(age)}h ago`;
 }
 
+function renderWeek(rows, now) {
+  const [from, to] = weekBounds(now);
+  const inWeek = rows.filter((r) => {
+    const t = new Date(r.due_at).getTime();
+    return t >= from && t < to;
+  });
+  const done = inWeek.filter((r) => isPast(r, now));
+  $("donut").innerHTML = donutSvg(done.length, inWeek.length);
+
+  const byCourse = new Map();
+  for (const row of inWeek) {
+    const key = row.course || "__none__";
+    if (!byCourse.has(key)) {
+      byCourse.set(key, { name: row.course || "No course", done: 0, total: 0 });
+    }
+    const entry = byCourse.get(key);
+    entry.total += 1;
+    if (isPast(row, now)) entry.done += 1;
+  }
+
+  const bars = $("bars");
+  if (!byCourse.size) {
+    bars.innerHTML = `<div class="colempty">Nothing due this week.</div>`;
+    return;
+  }
+  bars.innerHTML = [...byCourse.entries()].map(([key, c]) => {
+    const pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+    return `<div class="barrow">
+      <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
+      <div class="track"><div class="fill" style="width:${pct}%;
+        background:${courseColor(key)}"></div></div>
+      <div class="n">${c.done}/${c.total}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderUpNext(rows, now) {
+  const upcoming = rows
+    .filter((r) => !isPast(r, now) && new Date(r.due_at) - now <= 7 * DAY)
+    .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+
+  $("upTitle").textContent = `Coming up · next 7 days · ${upcoming.length}`;
+  $("up").innerHTML = upcoming.length
+    ? upcoming.map((r) => {
+        const ms = new Date(r.due_at) - now;
+        const p = priority(ms, false);
+        return `<div class="un">
+          ${prioIcon(p)}
+          <div class="t">${esc(r.title)}<small>${esc(r.course || "No course")}</small></div>
+          <div class="w p${p}">${relative(ms)}<br>
+            <span style="color:var(--faint);font-weight:400">${shortDate(r.due_at)}</span></div>
+        </div>`;
+      }).join("")
+    : `<div class="colempty">Nothing due in the next 7 days.</div>`;
+}
+
+function renderBoards(rows, now) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = row.course || "__none__";
+    if (!groups.has(key)) groups.set(key, { key, name: row.course || "No course", rows: [] });
+    groups.get(key).rows.push(row);
+  }
+
+  // Most urgent work first: count of open items inside the 3-day reminder
+  // window, then whichever has the single soonest deadline.
+  const urgent = (g) => g.rows.filter((r) => !isPast(r, now) &&
+    priority(new Date(r.due_at) - now, false) <= 2).length;
+  const soonest = (g) => Math.min(
+    ...g.rows.filter((r) => !isPast(r, now)).map((r) => new Date(r.due_at) - now), Infinity);
+  const ordered = [...groups.values()].sort((a, b) =>
+    urgent(b) - urgent(a) || soonest(a) - soonest(b));
+
+  let opened = [];
+  try { opened = JSON.parse(localStorage.getItem(OPEN_KEY) || "[]"); } catch (e) { /* ignore */ }
+
+  const host = $("boards");
+  host.innerHTML = "";
+  if (!ordered.length) {
+    host.innerHTML = `<div class="clear">Nothing tracked yet. Hit “Sync now”, or add a deadline below.</div>`;
+    return;
+  }
+
+  for (const group of ordered) {
+    const color = courseColor(group.key);
+    const due = group.rows.filter((r) => !isPast(r, now))
+      .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+    const past = group.rows.filter((r) => isPast(r, now))
+      .sort((a, b) => new Date(b.due_at) - new Date(a.due_at));
+    const pct = group.rows.length ? Math.round((past.length / group.rows.length) * 100) : 0;
+    const hot = urgent(group);
+
+    const board = document.createElement("details");
+    board.className = "board";
+    board.open = opened.includes(group.key);   // collapsed unless you opened it
+    board.style.borderLeft = `3px solid ${color}`;
+    board.innerHTML = `
+      <summary style="background:color-mix(in srgb, ${color} 12%, var(--surface))">
+        <span class="swatch" style="background:${color}"></span>
+        <span class="name">${esc(group.name)}
+          <small>${due.length} upcoming · ${past.length} done or passed${
+            hot ? ` · <span style="color:var(--warn)">${hot} urgent</span>` : ""}</small></span>
+        <span class="mini"><span class="track"><span class="fill"
+          style="width:${pct}%;background:${color}"></span></span></span>
+        <span class="count">${pct}%</span>
+        <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><path d="M4.5 2.5L8.5 6l-4 3.5"/></svg>
+      </summary>
+      <div class="cols">
+        <div class="col"><h3>Due · ${due.length}</h3><div data-slot="due"></div></div>
+        <div class="col past"><h3>Done &amp; passed · ${past.length}</h3>
+          <div data-slot="past"></div></div>
+      </div>`;
+
+    board.addEventListener("toggle", () => {
+      let open = [];
+      try { open = JSON.parse(localStorage.getItem(OPEN_KEY) || "[]"); } catch (e) { /* ignore */ }
+      const next = board.open
+        ? [...new Set([...open, group.key])]
+        : open.filter((k) => k !== group.key);
+      try { localStorage.setItem(OPEN_KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+    });
+
+    for (const [slot, list, blank] of [["due", due, "All clear"], ["past", past, "Nothing yet"]]) {
+      const target = board.querySelector(`[data-slot="${slot}"]`);
+      if (!list.length) { target.innerHTML = `<div class="colempty">${blank}</div>`; continue; }
+      list.forEach((row) => target.appendChild(card(row, now)));
+    }
+    host.appendChild(board);
+  }
+}
+
 function card(row, now) {
   const ms = new Date(row.due_at) - now;
+  const el = document.createElement("div");
+  el.className = "card" + (row.done ? " finished" : "");
+
   const title = row.url
     ? `<a href="${esc(row.url)}" target="_blank" rel="noopener">${esc(row.title)}</a>`
     : esc(row.title);
+
   const tags = [];
   if (row.done) tags.push(`<span class="tag ok">done</span>`);
   else if (ms < 0) tags.push(`<span class="tag late">date passed</span>`);
@@ -318,18 +512,54 @@ function card(row, now) {
   for (const h of row.reminders || []) {
     tags.push(`<span class="tag ok">${h >= 24 ? h / 24 + "d" : h + "h"} sent</span>`);
   }
-  return `<div class="card${row.done ? " finished" : ""}">
+
+  el.innerHTML = `
     <div class="row1">
-      <span class="mark ${row.done ? "on" : ""}">${row.done ? TICK : ""}</span>
       ${prioIcon(priority(ms, row.done))}
       <div class="t">${title}</div>
     </div>
     <div class="meta"><span>${shortDate(row.due_at)}</span><span>·</span>
       <span>${relative(ms)}</span>${tags.join("")}</div>
-  </div>`;
+`;
+
+
+
+
+  return el;
 }
 
-/* ---------- unlock ---------- */
+
+/* ---------- wiring ---------- */
+
+
+
+
+
+
+
+/* ---------- decrypt ---------- */
+const STORAGE_KEY = "coursetrack.pass";
+
+function b64ToBytes(value) {
+  const binary = atob(value);
+  const out = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+  return out;
+}
+
+async function decrypt(envelope, passphrase) {
+  const material = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: b64ToBytes(envelope.salt),
+      iterations: envelope.iterations, hash: "SHA-256" },
+    material, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  // GCM authenticates, so a wrong key throws instead of yielding garbage.
+  const plain = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: b64ToBytes(envelope.iv) }, key, b64ToBytes(envelope.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
 const diag = [];
 function note(line, bad) {
   diag.push(bad ? `<b>${line}</b>` : line);
@@ -339,8 +569,8 @@ function note(line, bad) {
 async function unlock(passphrase, remember) {
   const response = await fetch(`data.enc?t=${Date.now()}`, { cache: "no-store" });
   if (!response.ok) throw new Error(`Could not load data.enc (HTTP ${response.status})`);
-  DATA = await decrypt(await response.json(), passphrase);
-  if (remember) { try { localStorage.setItem(STORAGE_KEY, passphrase); } catch (e) { /* private mode */ } }
+  STATE = await decrypt(await response.json(), passphrase);
+  if (remember) { try { localStorage.setItem(STORAGE_KEY, passphrase); } catch (e) {} }
   $("lock").hidden = true;
   $("app").hidden = false;
   render();
@@ -354,7 +584,6 @@ $("unlockForm").onsubmit = async (event) => {
   btn.textContent = "Decrypting…";
   $("err").textContent = "";
   diag.length = 0;
-
   const raw = $("pass").value;
   const typed = raw.trim();
   note(`passphrase: ${typed.length} chars` +
@@ -373,7 +602,7 @@ $("unlockForm").onsubmit = async (event) => {
 };
 
 $("lockBtn").onclick = () => {
-  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
   location.href = location.pathname;
 };
 
@@ -398,11 +627,12 @@ $("lockBtn").onclick = () => {
   }
 
   let saved = null;
-  try { saved = (localStorage.getItem(STORAGE_KEY) || "").trim(); } catch (e) { /* ignore */ }
+  try { saved = (localStorage.getItem(STORAGE_KEY) || "").trim(); } catch (e) {}
   if (!saved) return;
   try { await unlock(saved, false); }
-  catch (error) { try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ } }
+  catch (error) { try { localStorage.removeItem(STORAGE_KEY); } catch (e) {} }
 })();
+
 </script>
 </body>
 </html>
