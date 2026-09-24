@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['data/**']   # the hourly state commit is not worth a CI run
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - run: pip install --disable-pip-version-check -e ".[dashboard,dev]"
+
+      # No secrets are provided to this job, which also proves the suite does
+      # not quietly depend on real credentials.
+      - run: pytest -q
+
+      - name: Verify nothing private leaked into the public file
+        run: python scripts/check_no_cleartext.py

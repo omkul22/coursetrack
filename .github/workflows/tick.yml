@@ -1,0 +1,115 @@
+name: tick
+
+# Triggers are deliberately limited to `schedule` and `workflow_dispatch`.
+# Adding `pull_request_target` (or anything else a fork can trigger) would
+# expose every secret below to arbitrary PR authors. Kept strict even though
+# the repo is private, so making it public later is not a silent downgrade.
+on:
+  schedule:
+    # Hourly at :05. GitHub routinely delays scheduled runs by 5-20 minutes;
+    # the reminder logic uses ">= threshold" rather than "== threshold", so
+    # drift costs nothing.
+    - cron: '5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Compute everything, send and write nothing'
+        type: boolean
+        default: false
+
+# The only permission this job needs: committing state back to the repo.
+#
+# On a PUBLIC repo this would have to be a fine-grained PAT instead, because
+# GitHub auto-disables scheduled workflows after 60 days of inactivity there
+# and GITHUB_TOKEN pushes do not reset that clock. Private repos are exempt
+# from that rule, so the built-in token is sufficient and there is no extra
+# credential to create or rotate. Revisit this if the repo ever goes public.
+permissions:
+  contents: write
+
+# State lives in the repo, so two overlapping runs would race on the push.
+concurrency:
+  group: coursetrack-state
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Pinned to a full commit SHA, not a tag: a tag can be repointed at new
+      # code, a SHA cannot.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true   # needed for the state push below
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      # Base install only — httpx and cryptography. FastAPI and uvicorn are in
+      # the [dashboard] extra and never reach CI.
+      - name: Install
+        run: pip install --disable-pip-version-check -e .
+
+      - name: Check required secrets are present
+        env:
+          COURSETRACK_KEY: ${{ secrets.COURSETRACK_KEY }}
+          CANVAS_TOKEN: ${{ secrets.CANVAS_TOKEN }}
+        run: |
+          missing=""
+          [ -z "$COURSETRACK_KEY" ] && missing="$missing COURSETRACK_KEY"
+          [ -z "$CANVAS_TOKEN" ] && missing="$missing CANVAS_TOKEN"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            exit 1
+          fi
+
+      - name: Run tick
+        env:
+          COURSETRACK_KEY: ${{ secrets.COURSETRACK_KEY }}
+          CANVAS_TOKEN: ${{ secrets.CANVAS_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          DASHBOARD_PASSPHRASE: ${{ secrets.DASHBOARD_PASSPHRASE }}
+        run: |
+          python -m coursetrack tick ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      # This repo is public. Nothing readable may ship. With the passphrase
+      # present the check decrypts the payload and proves none of its contents
+      # appear in any tracked file; without it, it still verifies the envelope
+      # is real ciphertext and scans for credential-shaped strings.
+      # Runs even if the tick failed, so a bad partial write cannot be pushed.
+      - name: Verify nothing cleartext is about to be committed
+        if: always()
+        env:
+          COURSETRACK_KEY: ${{ secrets.COURSETRACK_KEY }}
+          DASHBOARD_PASSPHRASE: ${{ secrets.DASHBOARD_PASSPHRASE }}
+        run: python scripts/check_no_cleartext.py
+
+      - name: Commit state
+        if: ${{ always() && !inputs.dry_run }}
+        run: |
+          if [ -z "$(git status --porcelain -- data docs)" ]; then
+            echo "No state changes."
+            exit 0
+          fi
+          git config user.name  "coursetrack"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- data docs
+          git commit -m "state: $(date -u +%Y-%m-%dT%H:%MZ)"
+
+          # The hourly job can collide with a dashboard push; rebase and retry.
+          for attempt in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            echo "push attempt $attempt failed; retrying"
+            sleep 5
+          done
+          echo "::error::Could not push state after 3 attempts"
+          exit 1

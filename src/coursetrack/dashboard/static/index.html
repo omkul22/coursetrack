@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CourseTrack</title>
+<style>
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --border: #e2e5ea;
+  --text: #14161a;
+  --muted: #6b7078;
+  --faint: #9aa0a8;
+  --accent: #4f6bed;
+  --danger: #d94f4f;
+  --warn: #d9932b;
+  --ok: #3a9c62;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(16,18,22,.06), 0 4px 16px rgba(16,18,22,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1013;
+    --surface: #16191e;
+    --surface-2: #1d2128;
+    --border: #272c34;
+    --text: #e8eaed;
+    --muted: #9aa0aa;
+    --faint: #6b7280;
+    --accent: #7d94ff;
+    --danger: #ff6b6b;
+    --warn: #e9a847;
+    --ok: #4ec27f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 96px; }
+
+/* header */
+header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -.01em; }
+.sub { color: var(--muted); font-size: 13px; }
+.grow { flex: 1; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+  padding: 4px 10px; border-radius: 999px; background: var(--surface-2);
+  color: var(--muted); border: 1px solid var(--border); white-space: nowrap;
+}
+.badge.ok { color: var(--ok); }
+.badge.bad { color: var(--danger); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* hero countdown */
+.hero {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px 22px; margin-bottom: 24px; box-shadow: var(--shadow);
+}
+.hero .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+.hero .count { font-size: 30px; font-weight: 650; letter-spacing: -.02em; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.hero .what { color: var(--muted); font-size: 14px; }
+.hero.urgent .count { color: var(--danger); }
+.hero.soon .count { color: var(--warn); }
+
+/* buttons */
+button {
+  font: inherit; font-size: 13px; cursor: pointer; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  padding: 7px 13px; transition: background .12s, border-color .12s;
+}
+button:hover { background: var(--surface-2); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { filter: brightness(1.08); }
+button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 4px 8px; }
+button.ghost:hover { background: var(--surface-2); color: var(--text); }
+
+/* groups */
+.group { margin-bottom: 26px; }
+.group h2 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--faint); margin: 0 0 10px; font-weight: 600;
+}
+.list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.row { display: flex; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.row:last-child { border-bottom: none; }
+.row:hover { background: var(--surface-2); }
+.row.done .title, .row.dismissed .title { text-decoration: line-through; color: var(--faint); }
+.stripe { width: 3px; align-self: stretch; border-radius: 2px; background: var(--faint); flex: none; }
+.stripe.urgent { background: var(--danger); }
+.stripe.soon { background: var(--warn); }
+.stripe.later { background: var(--accent); }
+.main { flex: 1; min-width: 0; }
+.title { font-weight: 560; letter-spacing: -.005em; word-break: break-word; }
+.title a { color: inherit; text-decoration: none; }
+.title a:hover { text-decoration: underline; }
+.meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.when { font-variant-numeric: tabular-nums; }
+.when.urgent { color: var(--danger); font-weight: 600; }
+.when.soon { color: var(--warn); font-weight: 600; }
+.pill { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
+.pill.sent { color: var(--ok); }
+.pill.priv { color: var(--accent); }
+.actions { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; flex: none; }
+.row:hover .actions, .row:focus-within .actions { opacity: 1; }
+
+/* panels */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.panel h2 { font-size: 13px; margin: 0 0 14px; letter-spacing: -.005em; }
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.field label { font-size: 12px; color: var(--muted); }
+input[type=text], input[type=datetime-local] {
+  font: inherit; font-size: 14px; padding: 8px 11px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text); width: 100%;
+}
+input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.courses { display: flex; flex-direction: column; gap: 2px; }
+.course { display: flex; align-items: center; gap: 10px; padding: 7px 2px; font-size: 14px; }
+.course .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.course.off .name { color: var(--faint); text-decoration: line-through; }
+
+/* switch */
+.switch { position: relative; width: 34px; height: 20px; flex: none; }
+.switch input { opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.switch span { position: absolute; inset: 0; background: var(--border); border-radius: 999px; pointer-events: none; transition: background .15s; }
+.switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::after { transform: translateX(14px); }
+
+.empty { padding: 40px 18px; text-align: center; color: var(--faint); font-size: 14px; }
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 999px;
+  font-size: 13px; box-shadow: var(--shadow); transition: transform .22s; z-index: 50; max-width: 90vw;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.bad { background: var(--danger); color: #fff; }
+@media (max-width: 560px) { .two { grid-template-columns: 1fr; } .actions { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="grow">
+      <h1>CourseTrack</h1>
+      <div class="sub" id="sub">loading…</div>
+    </div>
+    <span class="badge" id="health"><span class="dot"></span><span id="healthText">…</span></span>
+    <button class="primary" id="syncBtn">Sync now</button>
+  </header>
+
+  <div class="hero" id="hero" hidden>
+    <div class="label">Next deadline</div>
+    <div class="count" id="count">—</div>
+    <div class="what" id="what"></div>
+  </div>
+
+  <div id="groups"></div>
+
+  <div class="panel">
+    <h2>Add a deadline</h2>
+    <form id="addForm">
+      <div class="field">
+        <label for="f-title">Title</label>
+        <input type="text" id="f-title" required placeholder="Homework 4">
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="f-course">Course</label>
+          <input type="text" id="f-course" list="courseList" placeholder="17-437" value="Other">
+          <datalist id="courseList"></datalist>
+        </div>
+        <div class="field">
+          <label for="f-due">Due</label>
+          <input type="datetime-local" id="f-due" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-url">Link (optional)</label>
+        <input type="text" id="f-url" placeholder="https://…">
+      </div>
+      <label class="check"><input type="checkbox" id="f-private">
+        Private — keep the title out of the public repo</label>
+      <button class="primary" type="submit">Add deadline</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Courses</h2>
+    <div class="courses" id="courses"></div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let STATE = null;
+
+const HOUR = 3600e3;
+
+function urgency(ms) {
+  if (ms <= 12 * HOUR) return "urgent";
+  if (ms <= 72 * HOUR) return "soon";
+  return "later";
+}
+
+function relative(ms) {
+  if (ms < 0) {
+    const past = -ms;
+    if (past < HOUR) return `${Math.round(past / 60e3)} min ago`;
+    if (past < 36 * HOUR) return `${Math.round(past / HOUR)}h ago`;
+    return `${Math.round(past / (24 * HOUR))}d ago`;
+  }
+  if (ms < HOUR) return `in ${Math.round(ms / 60e3)} min`;
+  if (ms < 36 * HOUR) return `in ${Math.round(ms / HOUR)}h`;
+  return `in ${Math.round(ms / (24 * HOUR))}d`;
+}
+
+function absolute(iso) {
+  return new Date(iso).toLocaleString([], {
+    weekday: "short", month: "short", day: "numeric",
+    hour: "numeric", minute: "2-digit",
+  });
+}
+
+function countdown(ms) {
+  if (ms < 0) return "overdue";
+  const d = Math.floor(ms / (24 * HOUR));
+  const h = Math.floor((ms % (24 * HOUR)) / HOUR);
+  const m = Math.floor((ms % HOUR) / 60e3);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function toast(message, bad = false) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.toggle("bad", bad);
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 3600);
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.detail || response.statusText);
+  if (body.git && body.git.startsWith("WARNING")) toast(body.git, true);
+  return body;
+}
+
+// --- grouping -------------------------------------------------------------
+
+const GROUPS = [
+  { key: "overdue", title: "Overdue", test: (ms) => ms < 0 },
+  { key: "today", title: "Today", test: (ms, d) => isToday(d) },
+  { key: "soon", title: "Next 3 days", test: (ms) => ms <= 72 * HOUR },
+  { key: "week", title: "This week", test: (ms) => ms <= 7 * 24 * HOUR },
+  { key: "later", title: "Later", test: () => true },
+];
+
+function isToday(date) {
+  const now = new Date();
+  return date.toDateString() === now.toDateString();
+}
+
+function render() {
+  if (!STATE) return;
+  const now = Date.now();
+  const rows = STATE.deadlines.filter((r) => r.course_enabled !== false);
+
+  // hero
+  const upcoming = rows.filter((r) => new Date(r.due_at) - now > 0 && !r.dismissed && !isDone(r));
+  const hero = $("hero");
+  if (upcoming.length) {
+    const next = upcoming[0];
+    const ms = new Date(next.due_at) - now;
+    hero.hidden = false;
+    hero.className = "hero " + urgency(ms);
+    $("count").textContent = countdown(ms);
+    $("what").textContent = `${next.title} · ${next.course} · ${absolute(next.due_at)}`;
+  } else {
+    hero.hidden = true;
+  }
+
+  $("sub").textContent =
+    `${rows.length} tracked · reminders at ${STATE.thresholds.map((h) => h >= 24 ? `${h / 24}d` : `${h}h`).join(" and ")}` +
+    (STATE.recipient ? ` · ${STATE.recipient}` : " · no recipient set");
+
+  const health = $("health");
+  health.className = "badge " + (STATE.health.ok ? "ok" : "bad");
+  $("healthText").textContent = STATE.health.detail;
+
+  // groups
+  const buckets = new Map(GROUPS.map((g) => [g.key, []]));
+  for (const row of rows) {
+    const date = new Date(row.due_at);
+    const ms = date - now;
+    const group = GROUPS.find((g) => g.test(ms, date));
+    buckets.get(group.key).push(row);
+  }
+
+  const container = $("groups");
+  container.innerHTML = "";
+  let any = false;
+
+  for (const group of GROUPS) {
+    const items = buckets.get(group.key);
+    if (!items.length) continue;
+    any = true;
+    const section = document.createElement("div");
+    section.className = "group";
+    section.innerHTML = `<h2>${group.title} · ${items.length}</h2>`;
+    const list = document.createElement("div");
+    list.className = "list";
+    items.forEach((row) => list.appendChild(renderRow(row, now)));
+    section.appendChild(list);
+    container.appendChild(section);
+  }
+
+  if (!any) {
+    container.innerHTML = `<div class="list"><div class="empty">Nothing tracked yet.<br>Hit “Sync now” to pull from Canvas, or add one below.</div></div>`;
+  }
+
+  renderCourses();
+}
+
+function isDone(row) {
+  return ["submitted", "graded", "pending_review"].includes(row.submission);
+}
+
+function renderRow(row, now) {
+  const ms = new Date(row.due_at) - now;
+  const level = urgency(ms);
+  const done = isDone(row);
+
+  const el = document.createElement("div");
+  el.className = "row" + (done ? " done" : "") + (row.dismissed ? " dismissed" : "");
+
+  const title = row.url
+    ? `<a href="${escapeAttr(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.title)}</a>`
+    : escapeHtml(row.title);
+
+  const pills = [];
+  if (done) pills.push(`<span class="pill sent">submitted</span>`);
+  if (row.private) pills.push(`<span class="pill priv">private</span>`);
+  if (row.dismissed) pills.push(`<span class="pill">dismissed</span>`);
+  for (const hours of row.reminders) {
+    const label = hours >= 24 ? `${hours / 24}d` : `${hours}h`;
+    pills.push(`<span class="pill sent">${label} sent</span>`);
+  }
+
+  el.innerHTML = `
+    <div class="stripe ${level}"></div>
+    <div class="main">
+      <div class="title">${title}</div>
+      <div class="meta">
+        <span class="when ${ms < 0 ? '' : level}">${relative(ms)}</span>
+        <span>·</span><span>${absolute(row.due_at)}</span>
+        <span>·</span><span>${escapeHtml(row.course)}</span>
+        ${pills.join("")}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="ghost" data-act="dismiss">${row.dismissed ? "Restore" : "Dismiss"}</button>
+      ${row.source === "manual" ? `<button class="ghost" data-act="delete">Delete</button>` : ""}
+    </div>`;
+
+  el.querySelector('[data-act="dismiss"]').onclick = async () => {
+    await api(`/api/deadlines/${encodeURIComponent(row.id)}/dismiss?undo=${row.dismissed}`, { method: "POST" });
+    await load();
+  };
+  const del = el.querySelector('[data-act="delete"]');
+  if (del) del.onclick = async () => {
+    if (!confirm(`Delete “${row.title}”?`)) return;
+    await api(`/api/deadlines/${encodeURIComponent(row.id)}`, { method: "DELETE" });
+    toast("Deleted");
+    await load();
+  };
+  return el;
+}
+
+function renderCourses() {
+  const box = $("courses");
+  box.innerHTML = "";
+  if (!STATE.courses.length) {
+    box.innerHTML = `<div class="empty" style="padding:16px">No courses yet — run a sync.</div>`;
+    return;
+  }
+  const datalist = $("courseList");
+  datalist.innerHTML = "";
+
+  for (const course of STATE.courses) {
+    datalist.appendChild(Object.assign(document.createElement("option"), { value: course.name }));
+
+    const el = document.createElement("div");
+    el.className = "course" + (course.enabled ? "" : " off");
+    el.innerHTML = `
+      <label class="switch"><input type="checkbox" ${course.enabled ? "checked" : ""}><span></span></label>
+      <div class="name">${escapeHtml(course.name)}</div>`;
+    el.querySelector("input").onchange = async (event) => {
+      await api(`/api/courses/${encodeURIComponent(course.id)}/toggle`, {
+        method: "POST",
+        body: JSON.stringify({ enabled: event.target.checked }),
+      });
+      await load();
+    };
+    box.appendChild(el);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+const escapeAttr = escapeHtml;
+
+// --- wiring ---------------------------------------------------------------
+
+async function load() {
+  try {
+    STATE = await api("/api/state");
+    render();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
+$("syncBtn").onclick = async (event) => {
+  const button = event.target;
+  button.disabled = true;
+  button.textContent = "Syncing…";
+  try {
+    const result = await api("/api/sync", { method: "POST" });
+    toast(result.errors?.length ? result.errors.join("; ") : "Synced", !!result.errors?.length);
+    await load();
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Sync now";
+  }
+};
+
+$("addForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    await api("/api/deadlines", {
+      method: "POST",
+      body: JSON.stringify({
+        title: $("f-title").value,
+        course: $("f-course").value || "Other",
+        due_at: $("f-due").value,
+        url: $("f-url").value || null,
+        private: $("f-private").checked,
+      }),
+    });
+    toast("Added");
+    event.target.reset();
+    $("f-course").value = "Other";
+    await load();
+  } catch (err) {
+    toast(err.message, true);
+  }
+};
+
+load();
+setInterval(render, 30000);   // keep countdowns honest
+setInterval(load, 300000);    // pick up changes the scheduled job pushed
+</script>
+</body>
+</html>

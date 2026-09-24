@@ -1,0 +1,39 @@
+# Non-secret configuration. This file is committed to a PUBLIC repo —
+# never put a token, password or email address in here.
+# Secrets come from the environment; see .env.example.
+
+[general]
+# IANA name. All reminder-hour comparisons happen in this zone, so DST is
+# handled automatically and no second cron entry is needed.
+timezone = "America/New_York"
+
+[canvas]
+base_url = "https://canvas.cmu.edu"
+# Only assignments due within this rolling window are tracked.
+lookahead_days = 90
+
+[reminders]
+# Hours before the due time at which to send a warning.
+# 72 = 3 days, 12 = twelve hours.
+thresholds_hours = [72, 12]
+
+# Daily summary of everything due in the next `brief_lookahead_days`.
+# Sent by the first tick at or after this local hour (see engine.py for why
+# it is ">=" and not "==").
+brief_hour = 7
+brief_lookahead_days = 7
+
+# Suppress reminders for assignments Canvas reports as already submitted.
+skip_submitted = true
+
+[calendar]
+# A dedicated calendar keeps coursework togglable in one click and never
+# touches the primary calendar.
+calendar_name = "Coursework"
+# Length of the block placed immediately before the due time.
+block_minutes = 30
+
+[maintenance]
+# The first tick at or after this local hour writes a heartbeat commit, which
+# keeps a public repo from tripping the 60-day scheduled-workflow auto-disable.
+heartbeat_hour = 3

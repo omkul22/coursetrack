@@ -1,0 +1,37 @@
+# Secrets — none of this may ever reach the repo.
+.env
+.env.*
+# ...but the template carries no secrets and is the setup documentation.
+!.env.example
+token.json
+client_secret*.json
+*.key
+*.pem
+secrets.toml
+
+# Google service account keys. The console downloads these as
+# <project-id>-<key-id>.json, so the name is unpredictable — ignore every
+# JSON file at the repo root instead of trying to guess it. Nothing legitimate
+# lives there (data/*.json is in data/, and is still tracked).
+/*.json
+# Belt and braces for the conventional names, at any depth.
+**/*service-account*.json
+**/*serviceaccount*.json
+**/gcp-*.json
+
+# Local-only scratch
+.coursetrack/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+
+# Local-only plaintext cache used to detect payload changes.
+data/.payload-cache.json
