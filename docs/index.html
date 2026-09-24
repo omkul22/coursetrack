@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0e1013">
 <title>CourseTrack</title>
+<meta name="coursetrack-build" content="2">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📅</text></svg>">
 <style>
 :root {
@@ -131,7 +132,8 @@ h1.app{font-size:20px;margin:0 0 3px;letter-spacing:-.01em}
 
   <div class="foot">
     Read-only. Add or dismiss deadlines from the local dashboard.<br>
-    Decrypted in your browser — the server never sees your passphrase.
+    Decrypted in your browser — the server never sees your passphrase.<br>
+    <span id="build"></span>
   </div>
 </div>
 
@@ -321,8 +323,8 @@ $("unlockForm").onsubmit = async (event) => {
     // OperationError is AES-GCM refusing a wrong key; anything else is a load
     // failure worth showing verbatim.
     $("err").textContent = error.name === "OperationError"
-      ? "Wrong passphrase."
-      : error.message;
+      ? "Wrong passphrase \u2014 check for a stray space or newline."
+      : `Could not load the data: ${error.message}`;
     $("pass").select();
   } finally {
     btn.disabled = false;
@@ -336,6 +338,25 @@ $("lockBtn").onclick = () => {
 };
 
 (async function boot() {
+  $("build").textContent = "build " +
+    (document.querySelector('meta[name=coursetrack-build]')?.content || "?");
+
+  // 1. A passphrase in the URL fragment wins. Fragments are never transmitted
+  //    to the server, so a bookmarked link is as private as typing it, and it
+  //    removes the only manual step that can go wrong.
+  const fromHash = decodeURIComponent(location.hash.replace(/^#/, "")).trim();
+  if (fromHash) {
+    try {
+      await unlock(fromHash, true);
+      // Strip it from the address bar so it is not sitting on screen.
+      history.replaceState(null, "", location.pathname + location.search);
+      return;
+    } catch (error) {
+      $("err").textContent = "The passphrase in this link did not work.";
+    }
+  }
+
+  // 2. Otherwise fall back to whatever this device remembered.
   let saved = null;
   try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { /* ignore */ }
   if (!saved) return;
