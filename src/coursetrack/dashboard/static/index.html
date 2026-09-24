@@ -5,147 +5,138 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CourseTrack</title>
 <style>
-:root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --border: #e2e5ea;
-  --text: #14161a;
-  --muted: #6b7078;
-  --faint: #9aa0a8;
-  --accent: #4f6bed;
-  --danger: #d94f4f;
-  --warn: #d9932b;
-  --ok: #3a9c62;
-  --radius: 12px;
-  --shadow: 0 1px 2px rgba(16,18,22,.06), 0 4px 16px rgba(16,18,22,.05);
+:root{
+  --bg:#f4f5f7; --surface:#fff; --surface-2:#f1f2f4; --border:#dfe1e6;
+  --text:#172b4d; --muted:#626f86; --faint:#8993a4;
+  --accent:#0c66e4; --danger:#c9372c; --warn:#e56910; --mid:#b38600; --ok:#216e4e;
+  --radius:8px; --shadow:0 1px 1px rgba(9,30,66,.13),0 0 1px rgba(9,30,66,.08);
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1013;
-    --surface: #16191e;
-    --surface-2: #1d2128;
-    --border: #272c34;
-    --text: #e8eaed;
-    --muted: #9aa0aa;
-    --faint: #6b7280;
-    --accent: #7d94ff;
-    --danger: #ff6b6b;
-    --warn: #e9a847;
-    --ok: #4ec27f;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
-  }
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body {
-  margin: 0; background: var(--bg); color: var(--text);
-  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-.wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 96px; }
+@media (prefers-color-scheme:dark){:root{
+  --bg:#1d2125; --surface:#22272b; --surface-2:#282e33; --border:#38414a;
+  --text:#dee4ea; --muted:#9fadbc; --faint:#738496;
+  --accent:#579dff; --danger:#f87168; --warn:#fea362; --mid:#e2b203; --ok:#7ee2b8;
+  --shadow:0 1px 1px rgba(0,0,0,.5),0 0 1px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 80px}
 
-/* header */
-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
-h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -.01em; }
-.sub { color: var(--muted); font-size: 13px; }
-.grow { flex: 1; }
-.badge {
-  display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
-  padding: 4px 10px; border-radius: 999px; background: var(--surface-2);
-  color: var(--muted); border: 1px solid var(--border); white-space: nowrap;
-}
-.badge.ok { color: var(--ok); }
-.badge.bad { color: var(--danger); }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+header{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;letter-spacing:-.01em;font-weight:600}
+.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.grow{flex:1;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:4px 10px;
+  border-radius:3px;background:var(--surface-2);color:var(--muted);
+  border:1px solid var(--border);white-space:nowrap}
+.badge.ok{color:var(--ok)} .badge.bad{color:var(--danger)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 
-/* hero countdown */
-.hero {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px 22px; margin-bottom: 24px; box-shadow: var(--shadow);
-}
-.hero .label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
-.hero .count { font-size: 30px; font-weight: 650; letter-spacing: -.02em; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
-.hero .what { color: var(--muted); font-size: 14px; }
-.hero.urgent .count { color: var(--danger); }
-.hero.soon .count { color: var(--warn); }
+button{font:inherit;font-size:13px;cursor:pointer;border-radius:3px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);padding:6px 12px}
+button:hover{background:var(--surface-2)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.1)}
+button.ghost{border-color:transparent;background:transparent;color:var(--muted);
+  padding:3px 6px;font-size:12px}
+button.ghost:hover{background:var(--surface-2);color:var(--text)}
 
-/* buttons */
-button {
-  font: inherit; font-size: 13px; cursor: pointer; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text);
-  padding: 7px 13px; transition: background .12s, border-color .12s;
-}
-button:hover { background: var(--surface-2); }
-button:disabled { opacity: .5; cursor: default; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.primary:hover { filter: brightness(1.08); }
-button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 4px 8px; }
-button.ghost:hover { background: var(--surface-2); color: var(--text); }
+/* summary strip */
+.strip{margin-bottom:26px}
+.strip h2,.col h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--faint);margin:0 0 10px;font-weight:600}
+.rail{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.up{flex:0 0 234px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);
+  border-left:3px solid var(--accent)}
+.up.p1{border-left-color:var(--danger)} .up.p2{border-left-color:var(--warn)}
+.up.p3{border-left-color:var(--mid)}
+.up .t{font-weight:600;font-size:13.5px;line-height:1.3;margin-bottom:6px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.up .c{font-size:11.5px;color:var(--faint);margin-bottom:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.up .d{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.up .d.p1{color:var(--danger)} .up .d.p2{color:var(--warn)} .up .d.p3{color:var(--mid)}
+.clear{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);
+  padding:22px;text-align:center;color:var(--faint);font-size:13px}
 
-/* groups */
-.group { margin-bottom: 26px; }
-.group h2 {
-  font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--faint); margin: 0 0 10px; font-weight: 600;
-}
-.list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-.row { display: flex; gap: 14px; padding: 14px 18px; border-bottom: 1px solid var(--border); align-items: flex-start; }
-.row:last-child { border-bottom: none; }
-.row:hover { background: var(--surface-2); }
-.row.done .title, .row.dismissed .title { text-decoration: line-through; color: var(--faint); }
-.stripe { width: 3px; align-self: stretch; border-radius: 2px; background: var(--faint); flex: none; }
-.stripe.urgent { background: var(--danger); }
-.stripe.soon { background: var(--warn); }
-.stripe.later { background: var(--accent); }
-.main { flex: 1; min-width: 0; }
-.title { font-weight: 560; letter-spacing: -.005em; word-break: break-word; }
-.title a { color: inherit; text-decoration: none; }
-.title a:hover { text-decoration: underline; }
-.meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.when { font-variant-numeric: tabular-nums; }
-.when.urgent { color: var(--danger); font-weight: 600; }
-.when.soon { color: var(--warn); font-weight: 600; }
-.pill { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
-.pill.sent { color: var(--ok); }
-.pill.priv { color: var(--accent); }
-.actions { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; flex: none; }
-.row:hover .actions, .row:focus-within .actions { opacity: 1; }
+/* course boards */
+.board{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden}
+.board > .head{display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--border);background:var(--surface-2)}
+.board .name{font-weight:600;font-size:14px;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count{font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--border);
+  border-radius:10px;padding:1px 8px;white-space:nowrap}
+.cols{display:grid;grid-template-columns:1fr 1fr}
+.col{padding:12px;min-width:0}
+.col + .col{border-left:1px solid var(--border)}
+.col.past{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
 
-/* panels */
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 20px; box-shadow: var(--shadow); }
-.panel h2 { font-size: 13px; margin: 0 0 14px; letter-spacing: -.005em; }
-.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-.field label { font-size: 12px; color: var(--muted); }
-select, input[type=text], input[type=datetime-local] {
-  font: inherit; font-size: 14px; padding: 8px 11px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--bg); color: var(--text); width: 100%;
-}
-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.check { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
-.courses { display: flex; flex-direction: column; gap: 2px; }
-.course { display: flex; align-items: center; gap: 10px; padding: 7px 2px; font-size: 14px; }
-.course .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.course.off .name { color: var(--faint); text-decoration: line-through; }
+.card{background:var(--surface);border:1px solid var(--border);border-radius:5px;
+  padding:8px 10px;margin-bottom:6px;box-shadow:var(--shadow)}
+.card:last-child{margin-bottom:0}
+.card:hover{border-color:var(--accent)}
+.card .row1{display:flex;gap:8px;align-items:flex-start}
+.card .t{flex:1;min-width:0;font-size:13px;font-weight:500;line-height:1.35;word-break:break-word}
+.card .t a{color:inherit;text-decoration:none}
+.card .t a:hover{text-decoration:underline}
+.card .meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;
+  margin-top:6px;font-size:11.5px;color:var(--muted)}
+.card.finished .t{color:var(--faint);text-decoration:line-through}
+.prio{flex:0 0 14px;margin-top:1px}
+.chk{flex:0 0 16px;width:16px;height:16px;padding:0;border-radius:3px;
+  border:1.5px solid var(--faint);background:transparent;display:grid;place-items:center;line-height:1}
+.chk:hover{border-color:var(--ok);background:transparent}
+.chk.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.chk svg{display:block}
+.tag{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--surface-2);
+  border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.tag.late{color:var(--danger);border-color:currentColor}
+.tag.ok{color:var(--ok)} .tag.priv{color:var(--accent)}
+.acts{display:none;gap:1px;margin-top:6px}
+.card:hover .acts,.card:focus-within .acts{display:flex}
+.colempty{color:var(--faint);font-size:12px;padding:10px 2px;font-style:italic}
 
-/* switch */
-.switch { position: relative; width: 34px; height: 20px; flex: none; }
-.switch input { opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-.switch span { position: absolute; inset: 0; background: var(--border); border-radius: 999px; pointer-events: none; transition: background .15s; }
-.switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
-.switch input:checked + span { background: var(--accent); }
-.switch input:checked + span::after { transform: translateX(14px); }
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-top:20px;box-shadow:var(--shadow)}
+.panel h2{font-size:13px;margin:0 0 14px;font-weight:600}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:11.5px;color:var(--muted);font-weight:500}
+select,input[type=text],input[type=datetime-local]{font:inherit;font-size:13.5px;
+  padding:7px 10px;border-radius:3px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.check input{width:auto}
+.course{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:13.5px}
+.course .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.course.off .nm{color:var(--faint);text-decoration:line-through}
+.switch{position:relative;width:32px;height:18px;flex:none}
+.switch input{opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;background:var(--border);border-radius:9px;
+  pointer-events:none;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;
+  border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + span{background:var(--accent)}
+.switch input:checked + span::after{transform:translateX(14px)}
 
-.empty { padding: 40px 18px; text-align: center; color: var(--faint); font-size: 14px; }
-.toast {
-  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px);
-  background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 999px;
-  font-size: 13px; box-shadow: var(--shadow); transition: transform .22s; z-index: 50; max-width: 90vw;
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--text);color:var(--bg);padding:9px 16px;border-radius:3px;font-size:13px;
+  box-shadow:var(--shadow);transition:transform .2s;z-index:50;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.bad{background:var(--danger);color:#fff}
+@media (max-width:720px){
+  .cols{grid-template-columns:1fr}
+  .col + .col{border-left:none;border-top:1px solid var(--border)}
+  .two{grid-template-columns:1fr}
+  .acts{display:flex}
 }
-.toast.show { transform: translateX(-50%) translateY(0); }
-.toast.bad { background: var(--danger); color: #fff; }
-@media (max-width: 560px) { .two { grid-template-columns: 1fr; } .actions { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -160,20 +151,19 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
     <button class="primary" id="syncBtn">Sync now</button>
   </header>
 
-  <div class="hero" id="hero" hidden>
-    <div class="label">Next deadline</div>
-    <div class="count" id="count">—</div>
-    <div class="what" id="what"></div>
+  <div class="strip">
+    <h2 id="stripTitle">Due this week</h2>
+    <div class="rail" id="rail"></div>
   </div>
 
-  <div id="groups"></div>
+  <div id="boards"></div>
 
   <div class="panel">
     <h2>Add a deadline</h2>
     <form id="addForm">
       <div class="field">
         <label for="f-title">Title</label>
-        <input type="text" id="f-title" required placeholder="Homework 4">
+        <input type="text" id="f-title" required placeholder="Homework 5">
       </div>
       <div class="two">
         <div class="field">
@@ -190,18 +180,17 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
         <input type="text" id="f-url" placeholder="https://…">
       </div>
       <label class="check"><input type="checkbox" id="f-private">
-        Private — keep the title out of the public repo</label>
+        Private — keep the title out of the repo</label>
       <button class="primary" type="submit">Add deadline</button>
     </form>
   </div>
 
   <div class="panel">
     <h2>Courses</h2>
-    <div class="courses" id="courses"></div>
+    <div id="courses"></div>
     <form id="courseForm" style="display:flex;gap:8px;margin-top:14px">
-      <input type="text" id="f-newcourse" placeholder="Add a course Canvas doesn't have"
-             style="flex:1" required>
-      <button class="primary" type="submit" style="width:auto;white-space:nowrap">Add course</button>
+      <input type="text" id="f-newcourse" placeholder="Add a course Canvas doesn't have" required>
+      <button class="primary" type="submit" style="white-space:nowrap">Add course</button>
     </form>
   </div>
 
@@ -210,44 +199,62 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
 <script>
 const $ = (id) => document.getElementById(id);
+const HOUR = 3600e3;
+const DAY = 24 * HOUR;
 let STATE = null;
 
-const HOUR = 3600e3;
+/* A deadline leaves the summary and moves to its course's Past column purely
+   on time: once the due moment passes, it is no longer "upcoming" whether or
+   not it was ticked off. Ticking done just moves it there early. This is what
+   makes the board usable for 18740, where Canvas can never see the Gradescope
+   submission and would otherwise show everything as permanently outstanding. */
+const isPast = (row, now) => row.done || row.dismissed || new Date(row.due_at) - now < 0;
 
-function urgency(ms) {
-  if (ms <= 12 * HOUR) return "urgent";
-  if (ms <= 72 * HOUR) return "soon";
-  return "later";
+/* ---------- priority, drawn Jira-style so the board scans without reading ---------- */
+function priority(ms, done) {
+  if (done) return 0;
+  if (ms <= 12 * HOUR) return 1;   // matches the 12-hour reminder
+  if (ms <= 72 * HOUR) return 2;   // matches the 3-day reminder
+  if (ms <= 7 * DAY) return 3;
+  return 4;
+}
+const PRIO_LABEL = { 1: "Due within 12 hours", 2: "Due within 3 days",
+                     3: "Due this week", 4: "Later", 0: "Complete" };
+
+function prioIcon(level) {
+  const color = { 1: "var(--danger)", 2: "var(--warn)", 3: "var(--mid)",
+                  4: "var(--accent)", 0: "var(--faint)" }[level];
+  const paths = {
+    1: '<path d="M2 8.5L7 4l5 4.5"/><path d="M2 12L7 7.5l5 4.5"/>',
+    2: '<path d="M2 10L7 5.5l5 4.5"/>',
+    3: '<path d="M2.5 5.5h9"/><path d="M2.5 9.5h9"/>',
+    4: '<path d="M2 5.5L7 10l5-4.5"/>',
+    0: '<path d="M2.5 7.5h9"/>',
+  }[level];
+  return `<svg class="prio" width="14" height="14" viewBox="0 0 14 15" fill="none"
+    stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+    role="img"><title>${PRIO_LABEL[level]}</title>${paths}</svg>`;
 }
 
+const TICK = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor"
+  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5L4.8 9.2 10 3.5"/></svg>`;
+
+/* ---------- formatting ---------- */
 function relative(ms) {
   if (ms < 0) {
-    const past = -ms;
-    if (past < HOUR) return `${Math.round(past / 60e3)} min ago`;
-    if (past < 36 * HOUR) return `${Math.round(past / HOUR)}h ago`;
-    return `${Math.round(past / (24 * HOUR))}d ago`;
+    const p = -ms;
+    if (p < HOUR) return `${Math.round(p / 60e3)}m ago`;
+    if (p < 36 * HOUR) return `${Math.round(p / HOUR)}h ago`;
+    return `${Math.round(p / DAY)}d ago`;
   }
-  if (ms < HOUR) return `in ${Math.round(ms / 60e3)} min`;
+  if (ms < HOUR) return `in ${Math.round(ms / 60e3)}m`;
   if (ms < 36 * HOUR) return `in ${Math.round(ms / HOUR)}h`;
-  return `in ${Math.round(ms / (24 * HOUR))}d`;
+  return `in ${Math.round(ms / DAY)}d`;
 }
-
-function absolute(iso) {
-  return new Date(iso).toLocaleString([], {
-    weekday: "short", month: "short", day: "numeric",
-    hour: "numeric", minute: "2-digit",
-  });
-}
-
-function countdown(ms) {
-  if (ms < 0) return "overdue";
-  const d = Math.floor(ms / (24 * HOUR));
-  const h = Math.floor((ms % (24 * HOUR)) / HOUR);
-  const m = Math.floor((ms % HOUR) / 60e3);
-  if (d > 0) return `${d}d ${h}h ${m}m`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
+const shortDate = (iso) => new Date(iso).toLocaleString([], {
+  month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const esc = (v) => String(v).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 function toast(message, bad = false) {
   const el = $("toast");
@@ -255,164 +262,167 @@ function toast(message, bad = false) {
   el.classList.toggle("bad", bad);
   el.classList.add("show");
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove("show"), 3600);
+  el._t = setTimeout(() => el.classList.remove("show"), 3200);
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+  const response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.detail || response.statusText);
   if (body.git && body.git.startsWith("WARNING")) toast(body.git, true);
   return body;
 }
 
-// --- grouping -------------------------------------------------------------
-
-const GROUPS = [
-  { key: "overdue", title: "Overdue", test: (ms) => ms < 0 },
-  { key: "today", title: "Today", test: (ms, d) => isToday(d) },
-  { key: "soon", title: "Next 3 days", test: (ms) => ms <= 72 * HOUR },
-  { key: "week", title: "This week", test: (ms) => ms <= 7 * 24 * HOUR },
-  { key: "later", title: "Later", test: () => true },
-];
-
-function isToday(date) {
-  const now = new Date();
-  return date.toDateString() === now.toDateString();
-}
+/* ---------- render ---------- */
 
 function render() {
   if (!STATE) return;
   const now = Date.now();
-  const rows = STATE.deadlines.filter((r) => r.course_enabled !== false);
+  const visible = STATE.deadlines.filter((r) => r.course_enabled !== false);
 
-  // hero
-  const upcoming = rows.filter((r) => new Date(r.due_at) - now > 0 && !r.dismissed && !isDone(r));
-  const hero = $("hero");
-  if (upcoming.length) {
-    const next = upcoming[0];
-    const ms = new Date(next.due_at) - now;
-    hero.hidden = false;
-    hero.className = "hero " + urgency(ms);
-    $("count").textContent = countdown(ms);
-    $("what").textContent = `${next.title} · ${next.course} · ${absolute(next.due_at)}`;
-  } else {
-    hero.hidden = true;
-  }
-
-  $("sub").textContent =
-    `${rows.length} tracked · reminders at ${STATE.thresholds.map((h) => h >= 24 ? `${h / 24}d` : `${h}h`).join(" and ")}` +
-    (STATE.recipient ? ` · ${STATE.recipient}` : " · no recipient set");
-
-  const health = $("health");
-  health.className = "badge " + (STATE.health.ok ? "ok" : "bad");
-  $("healthText").textContent = STATE.health.detail;
-
-  // groups
-  const buckets = new Map(GROUPS.map((g) => [g.key, []]));
-  for (const row of rows) {
-    const date = new Date(row.due_at);
-    const ms = date - now;
-    const group = GROUPS.find((g) => g.test(ms, date));
-    buckets.get(group.key).push(row);
-  }
-
-  const container = $("groups");
-  container.innerHTML = "";
-  let any = false;
-
-  for (const group of GROUPS) {
-    const items = buckets.get(group.key);
-    if (!items.length) continue;
-    any = true;
-    const section = document.createElement("div");
-    section.className = "group";
-    section.innerHTML = `<h2>${group.title} · ${items.length}</h2>`;
-    const list = document.createElement("div");
-    list.className = "list";
-    items.forEach((row) => list.appendChild(renderRow(row, now)));
-    section.appendChild(list);
-    container.appendChild(section);
-  }
-
-  if (!any) {
-    container.innerHTML = `<div class="list"><div class="empty">Nothing tracked yet.<br>Hit “Sync now” to pull from Canvas, or add one below.</div></div>`;
-  }
-
+  renderStrip(visible, now);
+  renderBoards(visible, now);
   renderCourses();
+
+  const th = (STATE.thresholds || []).map((h) => h >= 24 ? `${h / 24}d` : `${h}h`).join(" and ");
+  const open = visible.filter((r) => !isPast(r, now)).length;
+  $("sub").textContent = `${open} upcoming · ${visible.length} tracked · reminders at ${th}` +
+    (STATE.recipient ? ` · ${STATE.recipient}` : "");
+  $("health").className = "badge " + (STATE.health.ok ? "ok" : "bad");
+  $("healthText").textContent = STATE.health.detail;
 }
 
-function isDone(row) {
-  return ["submitted", "graded", "pending_review"].includes(row.submission);
+function renderStrip(rows, now) {
+  const upcoming = rows
+    .filter((r) => !isPast(r, now) && new Date(r.due_at) - now <= 7 * DAY)
+    .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+
+  $("stripTitle").textContent = `Due this week · ${upcoming.length}`;
+  const rail = $("rail");
+  if (!upcoming.length) {
+    rail.innerHTML = `<div class="clear" style="flex:1">Nothing due in the next 7 days.</div>`;
+    return;
+  }
+  rail.innerHTML = upcoming.map((r) => {
+    const ms = new Date(r.due_at) - now;
+    const p = priority(ms, false);
+    return `<div class="up p${p}">
+      <div class="t">${esc(r.title)}</div>
+      <div class="c">${esc(r.course || "No course")}</div>
+      <div class="d p${p}">${relative(ms)} · ${shortDate(r.due_at)}</div>
+    </div>`;
+  }).join("");
 }
 
-function renderRow(row, now) {
+function renderBoards(rows, now) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = row.course_id || "__none__";
+    if (!groups.has(key)) groups.set(key, { name: row.course || "No course", rows: [] });
+    groups.get(key).rows.push(row);
+  }
+
+  // Courses with the most urgent open deadline float to the top.
+  const soonest = (group) => Math.min(
+    ...group.rows.filter((r) => !isPast(r, now)).map((r) => new Date(r.due_at) - now),
+    Infinity);
+  const ordered = [...groups.values()].sort((a, b) => soonest(a) - soonest(b));
+
+  const host = $("boards");
+  host.innerHTML = "";
+  if (!ordered.length) {
+    host.innerHTML = `<div class="clear">Nothing tracked yet. Hit “Sync now”, or add a deadline below.</div>`;
+    return;
+  }
+
+  for (const group of ordered) {
+    const due = group.rows.filter((r) => !isPast(r, now))
+      .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+    const past = group.rows.filter((r) => isPast(r, now))
+      .sort((a, b) => new Date(b.due_at) - new Date(a.due_at));
+
+    const board = document.createElement("div");
+    board.className = "board";
+    board.innerHTML = `
+      <div class="head">
+        <div class="name">${esc(group.name)}</div>
+        <span class="count">${due.length} upcoming</span>
+      </div>
+      <div class="cols">
+        <div class="col"><h3>Due · ${due.length}</h3><div data-slot="due"></div></div>
+        <div class="col past"><h3>Done &amp; passed · ${past.length}</h3><div data-slot="past"></div></div>
+      </div>`;
+
+    for (const [slot, list, blank] of [["due", due, "All clear"], ["past", past, "Nothing yet"]]) {
+      const host2 = board.querySelector(`[data-slot="${slot}"]`);
+      if (!list.length) { host2.innerHTML = `<div class="colempty">${blank}</div>`; continue; }
+      list.forEach((row) => host2.appendChild(card(row, now)));
+    }
+    host.appendChild(board);
+  }
+}
+
+function card(row, now) {
   const ms = new Date(row.due_at) - now;
-  const level = urgency(ms);
-  const done = isDone(row);
-
+  const level = priority(ms, row.done);
   const el = document.createElement("div");
-  el.className = "row" + (done ? " done" : "") + (row.dismissed ? " dismissed" : "");
+  el.className = "card" + (row.done ? " finished" : "");
 
   const title = row.url
-    ? `<a href="${escapeAttr(row.url)}" target="_blank" rel="noopener">${escapeHtml(row.title)}</a>`
-    : escapeHtml(row.title);
+    ? `<a href="${esc(row.url)}" target="_blank" rel="noopener">${esc(row.title)}</a>`
+    : esc(row.title);
 
-  const pills = [];
-  if (done) pills.push(`<span class="pill sent">submitted</span>`);
-  if (row.private) pills.push(`<span class="pill priv">private</span>`);
-  if (row.dismissed) pills.push(`<span class="pill">dismissed</span>`);
-  for (const hours of row.reminders) {
-    const label = hours >= 24 ? `${hours / 24}d` : `${hours}h`;
-    pills.push(`<span class="pill sent">${label} sent</span>`);
+  const tags = [];
+  if (row.done) tags.push(`<span class="tag ok">done</span>`);
+  else if (ms < 0) tags.push(`<span class="tag late">date passed</span>`);
+  if (row.dismissed) tags.push(`<span class="tag">dismissed</span>`);
+  if (row.private) tags.push(`<span class="tag priv">private</span>`);
+  for (const h of row.reminders || []) {
+    tags.push(`<span class="tag ok">${h >= 24 ? h / 24 + "d" : h + "h"} sent</span>`);
   }
 
   el.innerHTML = `
-    <div class="stripe ${level}"></div>
-    <div class="main">
-      <div class="title">${title}</div>
-      <div class="meta">
-        <span class="when ${ms < 0 ? '' : level}">${relative(ms)}</span>
-        <span>·</span><span>${absolute(row.due_at)}</span>
-        <span>·</span><span>${escapeHtml(row.course)}</span>
-        ${pills.join("")}
-      </div>
+    <div class="row1">
+      <button class="chk ${row.done ? "on" : ""}" aria-pressed="${row.done}"
+        title="${row.done ? "Mark not done" : "Mark done"}">${row.done ? TICK : ""}</button>
+      ${prioIcon(level)}
+      <div class="t">${title}</div>
     </div>
-    <div class="actions">
-      <button class="ghost" data-act="done">${row.done ? "Not done" : "Mark done"}</button>
-      ${row.editable ? `<button class="ghost" data-act="move">Course</button>` : ""}
+    <div class="meta">
+      <span>${shortDate(row.due_at)}</span><span>·</span><span>${relative(ms)}</span>
+      ${tags.join("")}
+    </div>
+    <div class="acts">
+      ${row.editable ? `<button class="ghost" data-act="move">Move</button>` : ""}
       <button class="ghost" data-act="dismiss">${row.dismissed ? "Restore" : "Dismiss"}</button>
       ${row.editable ? `<button class="ghost" data-act="delete">Delete</button>` : ""}
     </div>`;
 
-  el.querySelector('[data-act="done"]').onclick = async () => {
+  el.querySelector(".chk").onclick = async () => {
     await api(`/api/deadlines/${encodeURIComponent(row.id)}/done?undo=${row.done}`, { method: "POST" });
-    toast(row.done ? "Marked not done" : "Marked done \u2014 reminders stop");
+    toast(row.done ? "Moved back to Due" : "Done — reminders stop");
     await load();
   };
 
   const move = el.querySelector('[data-act="move"]');
   if (move) move.onclick = async () => {
     const options = STATE.courses.map((c, i) => `${i + 1}. ${c.name}`).join("\n");
-    const pick = prompt(`Move "${row.title}" to which course?\n\n${options}\n\nEnter a number:`);
+    const pick = prompt(`Move “${row.title}” to which course?\n\n${options}\n\nEnter a number:`);
     if (!pick) return;
     const chosen = STATE.courses[parseInt(pick, 10) - 1];
     if (!chosen) { toast("No such course", true); return; }
     await api(`/api/deadlines/${encodeURIComponent(row.id)}`, {
-      method: "PATCH",
-      body: JSON.stringify({ course_id: chosen.id, course: chosen.name }),
-    });
+      method: "PATCH", body: JSON.stringify({ course_id: chosen.id, course: chosen.name }) });
     toast(`Moved to ${chosen.name}`);
     await load();
   };
 
   el.querySelector('[data-act="dismiss"]').onclick = async () => {
-    await api(`/api/deadlines/${encodeURIComponent(row.id)}/dismiss?undo=${row.dismissed}`, { method: "POST" });
+    await api(`/api/deadlines/${encodeURIComponent(row.id)}/dismiss?undo=${row.dismissed}`,
+      { method: "POST" });
     await load();
   };
+
   const del = el.querySelector('[data-act="delete"]');
   if (del) del.onclick = async () => {
     if (!confirm(`Delete “${row.title}”?`)) return;
@@ -426,10 +436,7 @@ function renderRow(row, now) {
 function renderCourses() {
   const box = $("courses");
   box.innerHTML = "";
-  if (!STATE.courses.length) {
-    box.innerHTML = `<div class="empty" style="padding:16px">No courses yet — run a sync.</div>`;
-    return;
-  }
+
   const picker = $("f-course");
   const previous = picker.value;
   picker.innerHTML = '<option value="">Other (no course)</option>';
@@ -439,47 +446,41 @@ function renderCourses() {
   }
   picker.value = previous;
 
+  if (!STATE.courses.length) {
+    box.innerHTML = `<div class="colempty">No courses yet — run a sync.</div>`;
+    return;
+  }
+
   for (const course of STATE.courses) {
     const el = document.createElement("div");
     el.className = "course" + (course.enabled ? "" : " off");
     el.innerHTML = `
       <label class="switch"><input type="checkbox" ${course.enabled ? "checked" : ""}><span></span></label>
-      <div class="name">${escapeHtml(course.name)}</div>
-      ${course.custom ? `<span class="pill">custom</span>
-        <button class="ghost" data-del="${escapeAttr(course.id)}">Delete</button>` : ""}`;
-    const del = el.querySelector("[data-del]");
-    if (del) del.onclick = async () => {
-      if (!confirm(`Delete the course "${course.name}"? Its deadlines are kept and become uncategorised.`)) return;
-      await api(`/api/courses/${encodeURIComponent(course.id)}`, { method: "DELETE" });
-      toast("Course deleted");
-      await load();
-    };
+      <div class="nm">${esc(course.name)}</div>
+      ${course.custom ? `<span class="tag">custom</span>
+        <button class="ghost" data-del="1">Delete</button>` : ""}`;
+
     el.querySelector("input").onchange = async (event) => {
       await api(`/api/courses/${encodeURIComponent(course.id)}/toggle`, {
-        method: "POST",
-        body: JSON.stringify({ enabled: event.target.checked }),
-      });
+        method: "POST", body: JSON.stringify({ enabled: event.target.checked }) });
+      await load();
+    };
+    const del = el.querySelector("[data-del]");
+    if (del) del.onclick = async () => {
+      if (!confirm(`Delete “${course.name}”? Its deadlines are kept and become uncategorised.`)) return;
+      await api(`/api/courses/${encodeURIComponent(course.id)}`, { method: "DELETE" });
+      toast("Course deleted");
       await load();
     };
     box.appendChild(el);
   }
 }
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-const escapeAttr = escapeHtml;
-
-// --- wiring ---------------------------------------------------------------
+/* ---------- wiring ---------- */
 
 async function load() {
-  try {
-    STATE = await api("/api/state");
-    render();
-  } catch (err) {
-    toast(err.message, true);
-  }
+  try { STATE = await api("/api/state"); render(); }
+  catch (err) { toast(err.message, true); }
 }
 
 $("syncBtn").onclick = async (event) => {
@@ -490,54 +491,41 @@ $("syncBtn").onclick = async (event) => {
     const result = await api("/api/sync", { method: "POST" });
     toast(result.errors?.length ? result.errors.join("; ") : "Synced", !!result.errors?.length);
     await load();
-  } catch (err) {
-    toast(err.message, true);
-  } finally {
-    button.disabled = false;
-    button.textContent = "Sync now";
-  }
-};
-
-$("courseForm").onsubmit = async (event) => {
-  event.preventDefault();
-  try {
-    await api("/api/courses", {
-      method: "POST",
-      body: JSON.stringify({ name: $("f-newcourse").value }),
-    });
-    toast("Course added");
-    event.target.reset();
-    await load();
-  } catch (err) {
-    toast(err.message, true);
-  }
+  } catch (err) { toast(err.message, true); }
+  finally { button.disabled = false; button.textContent = "Sync now"; }
 };
 
 $("addForm").onsubmit = async (event) => {
   event.preventDefault();
   try {
-    await api("/api/deadlines", {
-      method: "POST",
-      body: JSON.stringify({
-        title: $("f-title").value,
-        course_id: $("f-course").value,
-        course: $("f-course").selectedOptions[0]?.textContent || "Other",
-        due_at: $("f-due").value,
-        url: $("f-url").value || null,
-        private: $("f-private").checked,
-      }),
-    });
+    await api("/api/deadlines", { method: "POST", body: JSON.stringify({
+      title: $("f-title").value,
+      course_id: $("f-course").value,
+      course: $("f-course").selectedOptions[0]?.textContent || "Other",
+      due_at: $("f-due").value,
+      url: $("f-url").value || null,
+      private: $("f-private").checked,
+    }) });
     toast("Added");
     event.target.reset();
     await load();
-  } catch (err) {
-    toast(err.message, true);
-  }
+  } catch (err) { toast(err.message, true); }
+};
+
+$("courseForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    await api("/api/courses", { method: "POST",
+      body: JSON.stringify({ name: $("f-newcourse").value }) });
+    toast("Course added");
+    event.target.reset();
+    await load();
+  } catch (err) { toast(err.message, true); }
 };
 
 load();
-setInterval(render, 30000);   // keep countdowns honest
-setInterval(load, 300000);    // pick up changes the scheduled job pushed
+setInterval(render, 60000);
+setInterval(load, 300000);
 </script>
 </body>
 </html>
