@@ -33,5 +33,3 @@ dist/
 venv/
 .pytest_cache/
 
-# Local-only plaintext cache used to detect payload changes.
-data/.payload-cache.json

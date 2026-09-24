@@ -204,3 +204,38 @@ def test_payload_is_sorted_by_due_date(config, key, now):
         now,
     )
     assert [r["title"] for r in read_payload(config)["deadlines"]] == ["early", "late"]
+
+
+# --- payload churn ---------------------------------------------------------
+
+
+def test_digest_lives_in_encrypted_state_not_on_disk(config, key, now):
+    """The old plaintext cache was gitignored, so CI never saw it and
+    republished 8KB every hour forever. The digest must survive a reload."""
+    store = Store(config, key=key).load()
+    store.save([make_deadline()], now)
+    assert store.private.payload_digest
+
+    reloaded = Store(config, key=key).load()
+    assert reloaded.private.payload_digest == store.private.payload_digest
+    assert not (config.data_dir / ".payload-cache.json").exists()
+
+
+def test_a_fresh_process_with_unchanged_data_republishes_nothing(config, key, now):
+    """Simulates consecutive CI runs: each starts cold from the repo."""
+    deadlines = [make_deadline(), make_deadline(title="Quiz 2")]
+    Store(config, key=key).load().save(deadlines, now)
+    first = config.payload_path.read_bytes()
+
+    for hour in range(1, 5):
+        result = Store(config, key=key).load().save(deadlines, now + timedelta(hours=hour))
+        assert not result.payload_changed, f"republished on hour {hour}"
+    assert config.payload_path.read_bytes() == first
+
+
+def test_a_real_change_still_republishes(config, key, now):
+    Store(config, key=key).load().save([make_deadline()], now)
+    result = Store(config, key=key).load().save(
+        [make_deadline(), make_deadline(title="New assignment")], now
+    )
+    assert result.payload_changed

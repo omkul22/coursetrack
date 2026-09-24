@@ -58,15 +58,6 @@ class Config:
         return self.docs_dir / "data.enc"
 
     @property
-    def payload_plain_cache(self) -> Path:
-        """Local-only plaintext of the last payload, for change detection.
-
-        Gitignored. Without it every run would look changed, because the
-        ciphertext gets a fresh salt and nonce each time.
-        """
-        return self.data_dir / ".payload-cache.json"
-
-    @property
     def private_path(self) -> Path:
         return self.data_dir / "private.enc"
 

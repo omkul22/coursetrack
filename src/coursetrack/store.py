@@ -19,6 +19,7 @@ function nobody remembers to update.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from dataclasses import asdict, dataclass, field
@@ -61,6 +62,10 @@ class PrivateState:
     course_settings: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     dismissed: list[str] = field(default_factory=list)
+
+    # sha256 of the last published payload's plaintext, so change detection
+    # needs no plaintext file on disk.
+    payload_digest: str = ""
 
     last_brief_date: str = ""
     last_heartbeat_date: str = ""
@@ -244,29 +249,41 @@ class Store:
                 self.config.payload_path,
                 envelope_bytes(encrypt_payload(payload, secret)),
             )
-            _atomic_write(self.config.payload_plain_cache, json.dumps(document).encode())
+            # Record the digest and re-persist, so the next run can tell that
+            # nothing changed. Done after the payload write so a crash between
+            # the two leaves the digest stale (which re-publishes) rather than
+            # fresh (which would skip a needed publish).
+            self.private.payload_digest = _digest(document)
+            _atomic_write(self.config.private_path, encrypt_json(self.key, asdict(self.private)))
+            self._private_snapshot = self._canonical_private()
 
         return SaveResult(private_changed, payload_changed)
 
     def _payload_differs(self, document: dict[str, Any]) -> bool:
-        """Compare the plaintext payload, ignoring the timestamp.
+        """Has the published payload actually changed?
 
-        The ciphertext changes every run by construction (fresh salt/nonce),
-        so a local plaintext cache is kept purely to answer "did anything
-        actually change?" without decrypting.
+        The ciphertext is different every run by construction (fresh salt and
+        nonce), so it cannot be compared directly. Comparing against a
+        plaintext file on disk would either leak content or, if gitignored,
+        be missing in CI and report "changed" every single hour — which is
+        exactly what it did before this, committing 8KB hourly forever.
+
+        Instead the digest of the plaintext lives inside the encrypted state,
+        so it travels with the repo and reveals nothing.
         """
-        cache = self.config.payload_plain_cache
-        if not self.config.payload_path.is_file() or not cache.is_file():
+        if not self.config.payload_path.is_file():
             return True
-        try:
-            previous = json.loads(cache.read_text())
-        except json.JSONDecodeError:
-            return True
-        return _comparable(previous) != _comparable(document)
+        return _digest(document) != self.private.payload_digest
 
 
 def _comparable(document: dict[str, Any]) -> dict[str, Any]:
+    """Everything except the timestamp, which changes every run by definition."""
     return {k: v for k, v in document.items() if k != "generated_at"}
+
+
+def _digest(document: dict[str, Any]) -> str:
+    canonical = json.dumps(_comparable(document), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
 
 
 def _atomic_write(path: Path, payload: bytes) -> None:
