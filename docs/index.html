@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0e1013">
 <title>CourseTrack</title>
-<meta name="coursetrack-build" content="2">
+<meta name="coursetrack-build" content="3">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📅</text></svg>">
 <style>
 :root {
@@ -45,6 +45,9 @@ button:hover{filter:brightness(1.08)} button:disabled{opacity:.6;cursor:default}
 .remember{display:flex;gap:8px;align-items:center;justify-content:center;
   font-size:13px;color:var(--muted);margin-top:14px}
 .remember input{width:auto}
+#diag{font:11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--faint);
+  text-align:left;margin:16px 0 0;white-space:pre-wrap;word-break:break-all}
+#diag b{color:var(--danger);font-weight:600}
 
 /* app */
 header{display:flex;align-items:flex-start;gap:12px;margin-bottom:22px;flex-wrap:wrap}
@@ -109,6 +112,7 @@ h1.app{font-size:20px;margin:0 0 3px;letter-spacing:-.01em}
       <button type="submit" id="unlockBtn">Unlock</button>
     </form>
     <div class="err" id="err"></div>
+    <pre id="diag"></pre>
   </div>
 </div>
 
@@ -311,24 +315,74 @@ async function unlock(passphrase, remember) {
   setInterval(render, 30000);
 }
 
+/* Every failure below used to collapse into "it just goes back to the button".
+   Each step now reports itself, so a screenshot of this panel is enough to
+   diagnose the problem without another round trip. */
+const diag = [];
+function note(line, bad) {
+  diag.push(bad ? `<b>${line}</b>` : line);
+  $("diag").innerHTML = diag.join("\n");
+}
+
 $("unlockForm").onsubmit = async (event) => {
   event.preventDefault();
   const btn = $("unlockBtn");
   btn.disabled = true;
   btn.textContent = "Decrypting…";
   $("err").textContent = "";
+  diag.length = 0;
+
+  const typed = $("pass").value;
+  note(`passphrase: ${typed.length} chars` +
+       (typed !== typed.trim() ? " (HAS LEADING/TRAILING SPACE)" : ""),
+       typed !== typed.trim());
+
+  let envelope;
   try {
-    await unlock($("pass").value, $("remember").checked);
+    const started = Date.now();
+    const response = await fetch(`data.enc?t=${Date.now()}`, { cache: "no-store" });
+    note(`fetch data.enc: HTTP ${response.status} (${Date.now() - started}ms)`, !response.ok);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    note(`payload: ${text.length} bytes`);
+    envelope = JSON.parse(text);
+    note(`envelope: ${envelope.cipher}, ${envelope.iterations} iters`);
   } catch (error) {
-    // OperationError is AES-GCM refusing a wrong key; anything else is a load
-    // failure worth showing verbatim.
+    note(`FETCH FAILED: ${error.name}: ${error.message}`, true);
+    $("err").textContent = "Could not load the encrypted data. See details below.";
+    btn.disabled = false; btn.textContent = "Unlock";
+    return;
+  }
+
+  try {
+    const started = Date.now();
+    DATA = await decrypt(envelope, typed);
+    note(`decrypt: OK in ${Date.now() - started}ms, ${DATA.deadlines.length} deadlines`);
+  } catch (error) {
+    note(`DECRYPT FAILED: ${error.name}: ${error.message || "(no message)"}`, true);
     $("err").textContent = error.name === "OperationError"
       ? "Wrong passphrase \u2014 check for a stray space or newline."
-      : `Could not load the data: ${error.message}`;
+      : `Decryption error: ${error.name}`;
     $("pass").select();
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Unlock";
+    btn.disabled = false; btn.textContent = "Unlock";
+    return;
+  }
+
+  try {
+    if ($("remember").checked) {
+      try { localStorage.setItem(STORAGE_KEY, typed); note("saved to this device"); }
+      catch (e) { note(`localStorage blocked: ${e.name}`, true); }
+    }
+    $("lock").hidden = true;
+    $("app").hidden = false;
+    render();
+    setInterval(render, 30000);
+  } catch (error) {
+    note(`RENDER FAILED: ${error.name}: ${error.message}`, true);
+    $("lock").hidden = false;
+    $("app").hidden = true;
+    $("err").textContent = `Could not draw the page: ${error.message}`;
+    btn.disabled = false; btn.textContent = "Unlock";
   }
 };
 
@@ -338,8 +392,11 @@ $("lockBtn").onclick = () => {
 };
 
 (async function boot() {
-  $("build").textContent = "build " +
-    (document.querySelector('meta[name=coursetrack-build]')?.content || "?");
+  const build = document.querySelector('meta[name=coursetrack-build]')?.content || "?";
+  $("build").textContent = "build " + build;
+  note(`build ${build}`);
+  note(`secure context: ${window.isSecureContext}`, !window.isSecureContext);
+  note(`crypto.subtle: ${typeof crypto?.subtle}`, typeof crypto?.subtle !== "object");
 
   // 1. A passphrase in the URL fragment wins. Fragments are never transmitted
   //    to the server, so a bookmarked link is as private as typing it, and it
