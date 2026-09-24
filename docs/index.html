@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0e1013">
 <title>CourseTrack</title>
-<meta name="coursetrack-build" content="3">
+<meta name="coursetrack-build" content="4">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📅</text></svg>">
 <style>
 :root {
@@ -332,10 +332,10 @@ $("unlockForm").onsubmit = async (event) => {
   $("err").textContent = "";
   diag.length = 0;
 
-  const typed = $("pass").value;
+  const raw = $("pass").value;
+  const typed = raw.trim();
   note(`passphrase: ${typed.length} chars` +
-       (typed !== typed.trim() ? " (HAS LEADING/TRAILING SPACE)" : ""),
-       typed !== typed.trim());
+       (raw !== typed ? ` (trimmed ${raw.length - typed.length} whitespace char(s))` : ""));
 
   let envelope;
   try {
@@ -415,7 +415,7 @@ $("lockBtn").onclick = () => {
 
   // 2. Otherwise fall back to whatever this device remembered.
   let saved = null;
-  try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+  try { saved = (localStorage.getItem(STORAGE_KEY) || "").trim(); } catch (e) { /* ignore */ }
   if (!saved) return;
   try {
     await unlock(saved, false);
